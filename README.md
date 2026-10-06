@@ -1,6 +1,6 @@
 <div align="center">
 
-# Jules-OS: The Asynchronous Agentic Second Brain
+# Obsidian-Jules: The Asynchronous Agentic Second Brain
 
 Most AI note-taking tools just read your text. This system thinks with you, challenges your assumptions, and manages your career in the background. Inspired by Google's asynchronous Jules agent, this is a **CI/CD-driven Executive OS** built on Obsidian and Claude/Gemini.
 

@@ -261,20 +261,19 @@ function findOpenLoops(
 		// yet — it stops the shipped file becoming an unclearable open loop
 		// the first time its instructions gain one (#155).
 		if (isInboxScaffold(rel)) continue;
-		let content: string;
-		let mtimeMs: number;
 		try {
 			const full = join(root, rel);
-			content = readFileSync(full, "utf-8");
-			mtimeMs = statSync(full).mtimeMs;
+			const mtimeMs = statSync(full).mtimeMs;
+			const ageDays = Math.floor((nowMs - mtimeMs) / 86_400_000);
+			if (ageDays < OPEN_LOOP_DAYS) continue;
+
+			const content = readFileSync(full, "utf-8");
+			const openItems = countOpenLoops(content, config.sectionRe);
+			if (openItems === 0) continue;
+			out.push({ path: rel, ageDays, openItems });
 		} catch {
 			continue;
 		}
-		const ageDays = Math.floor((nowMs - mtimeMs) / 86_400_000);
-		if (ageDays < OPEN_LOOP_DAYS) continue;
-		const openItems = countOpenLoops(content, config.sectionRe);
-		if (openItems === 0) continue;
-		out.push({ path: rel, ageDays, openItems });
 	}
 	// Oldest first, capped — surface the longest-dead loops, stay quiet-ish.
 	return out.sort((a, b) => b.ageDays - a.ageDays).slice(0, OPEN_LOOP_CAP);

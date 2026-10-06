@@ -1,0 +1,41 @@
+views:
+  - type: table
+    name: "Scorecards (live per-service view)"
+    filters:
+      and:
+        - 'file.inFolder("60_modeling/system_dynamics/sd-model/scorecards")'
+    order:
+      - file.name
+      - service
+      - data_confidence
+      - last_calibrated
+    groupBy:
+      property: service
+      direction: ASC
+
+  - type: table
+    name: "Concepts"
+    filters:
+      and:
+        - 'file.inFolder("60_modeling/system_dynamics/sd-model/concepts")'
+    order:
+      - file.name
+      - description
+
+  - type: table
+    name: "Services"
+    filters:
+      and:
+        - 'file.inFolder("60_modeling/system_dynamics/sd-model/services")'
+    order:
+      - file.name
+      - description
+
+  - type: list
+    name: "Recent feed entries"
+    filters:
+      and:
+        - 'file.inFolder("60_modeling/system_dynamics/sd-model/feed")'
+    order:
+      - file.name
+      - file.mtime

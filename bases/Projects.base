@@ -1,0 +1,119 @@
+filters:
+  and:
+    - file.ext == "md"
+    - or:
+        - type == "project"
+        - type == "program"
+formulas:
+  days_since_update: if(updated, (today() - date(updated)).days, "")
+  folder: file.folder
+properties:
+  file.name:
+    displayName: Project
+  domain:
+    displayName: Domain
+  status:
+    displayName: Status
+  version:
+    displayName: Version
+  schedule:
+    displayName: Schedule
+  runtime:
+    displayName: Runtime
+  data_sources:
+    displayName: Data sources
+  pii:
+    displayName: PII
+  updated:
+    displayName: Updated
+  formula.days_since_update:
+    displayName: Days since update
+  description:
+    displayName: Summary
+views:
+  - type: table
+    name: All projects
+    groupBy:
+      property: domain
+      direction: ASC
+    order:
+      - file.name
+      - status
+      - version
+      - updated
+      - formula.days_since_update
+      - description
+  - type: table
+    name: Active
+    filters:
+      and:
+        - status == "active"
+    order:
+      - file.name
+      - domain
+      - version
+      - updated
+      - description
+    sort:
+      - property: updated
+        direction: DESC
+  - type: table
+    name: Scheduled pipelines
+    filters:
+      and:
+        - schedule != "none"
+        - schedule != ""
+    order:
+      - file.name
+      - schedule
+      - runtime
+      - data_sources
+      - status
+  - type: table
+    name: Stale (30+ days)
+    filters:
+      and:
+        - status == "active"
+        - date(updated) < today() - "30d"
+    order:
+      - file.name
+      - domain
+      - updated
+      - formula.days_since_update
+    sort:
+      - property: updated
+        direction: ASC
+  - type: table
+    name: Contains PII
+    filters:
+      and:
+        - pii == true
+    order:
+      - file.name
+      - domain
+      - data_sources
+  - type: cards
+    name: Cards
+    groupBy:
+      property: domain
+      direction: ASC
+    order:
+      - file.name
+      - status
+      - description
+  - type: table
+    name: This domain
+    filters:
+      and:
+        - domain == this.domain
+        - type == "project"
+    order:
+      - file.name
+      - status
+      - version
+      - schedule
+      - updated
+      - description
+    sort:
+      - property: file.name
+        direction: ASC

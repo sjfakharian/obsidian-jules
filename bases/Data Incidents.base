@@ -1,0 +1,43 @@
+filters:
+  and:
+    - file.ext == "md"
+    - file.inFolder("70_platform/data_catalog/agent_knowledge/incidents")
+    - '!file.name.contains("README")'
+properties:
+  file.name:
+    displayName: Incident
+  severity:
+    displayName: Severity
+  status:
+    displayName: Status
+  scope:
+    displayName: Scope
+  created_at_utc:
+    displayName: Created (UTC)
+views:
+  - type: table
+    name: Open
+    filters:
+      and:
+        - status == "open"
+    order:
+      - file.name
+      - severity
+      - scope
+      - created_at_utc
+    sort:
+      - property: created_at_utc
+        direction: DESC
+  - type: table
+    name: All
+    groupBy:
+      property: status
+      direction: DESC
+    order:
+      - file.name
+      - severity
+      - scope
+      - created_at_utc
+    sort:
+      - property: created_at_utc
+        direction: DESC

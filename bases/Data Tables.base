@@ -1,0 +1,34 @@
+filters:
+  and:
+    - file.ext == "md"
+    - or:
+        - file.inFolder("70_platform/data_catalog/catalog/tables")
+        - file.inFolder("70_platform/data_catalog/catalog/clickhouse/tables")
+formulas:
+  engine: if(file.folder.contains("clickhouse"), "ClickHouse", "MySQL")
+  used_by: file.backlinks.length
+properties:
+  file.name:
+    displayName: Table
+  formula.engine:
+    displayName: Engine
+  formula.used_by:
+    displayName: Linked from (#notes)
+views:
+  - type: table
+    name: Most used tables
+    order:
+      - file.name
+      - formula.engine
+      - formula.used_by
+    sort:
+      - property: formula.used_by
+        direction: DESC
+  - type: table
+    name: By engine
+    groupBy:
+      property: formula.engine
+      direction: ASC
+    order:
+      - file.name
+      - formula.used_by

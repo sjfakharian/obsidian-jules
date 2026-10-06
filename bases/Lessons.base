@@ -1,0 +1,21 @@
+filters:
+  and:
+    - file.ext == "md"
+    - file.inFolder("70_platform/data_catalog/agent_knowledge/lessons")
+properties:
+  file.name:
+    displayName: Lesson
+  scope:
+    displayName: Scope
+  created_at_utc:
+    displayName: Created (UTC)
+views:
+  - type: table
+    name: All lessons
+    order:
+      - file.name
+      - scope
+      - created_at_utc
+    sort:
+      - property: file.name
+        direction: DESC

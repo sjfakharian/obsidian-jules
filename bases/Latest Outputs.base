@@ -1,0 +1,46 @@
+filters:
+  and:
+    - file.path.contains("/outputs/")
+    - file.ext != "md"
+    - '!file.inFolder("90_archive")'
+    - '!file.path.contains("/archive/")'
+formulas:
+  project: file.folder.split("/outputs/")[0]
+  touched: file.mtime.format("YYYY-MM-DD HH:mm")
+  size_mb: (file.size / 1048576).round(1)
+properties:
+  file.name:
+    displayName: File
+  formula.project:
+    displayName: Project
+  formula.touched:
+    displayName: Modified
+  formula.size_mb:
+    displayName: MB
+  file.ext:
+    displayName: Type
+views:
+  - type: table
+    name: Newest 50
+    order:
+      - file.name
+      - formula.project
+      - formula.touched
+      - file.ext
+      - formula.size_mb
+    sort:
+      - property: file.mtime
+        direction: DESC
+    limit: 50
+  - type: table
+    name: Latest folders only
+    filters:
+      and:
+        - file.path.contains("/outputs/latest/")
+    groupBy:
+      property: formula.project
+      direction: ASC
+    order:
+      - file.name
+      - formula.touched
+      - formula.size_mb

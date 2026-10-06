@@ -88,3 +88,7 @@ After writing, summarize to the parent conversation:
 - Top 5 key moments
 - People who need vault notes
 - Suggested next steps (create incident note? update person notes? add to brag doc?)
+
+## Autonomy & Scheduling
+- **Trigger**: Run automatically when a PagerDuty alert is resolved or via an incoming webhook tagged with `#incident`.
+- **Autonomous Action**: Compile the reconstruction timeline and automatically generate a draft incident post-mortem in `work/incidents/drafts/`, tagging the involved individuals for review.

@@ -75,3 +75,7 @@ Summarize to the parent conversation:
 - Draft 2-3 brag doc entries ready to paste, with wikilinks to evidence
 
 Do NOT modify the brag doc directly — present findings for user approval.
+
+## Autonomy & Scheduling
+- **Trigger**: Run automatically every Friday at 4 PM via system cron (`/om-brag-spot --auto`) or upon receiving a webhook from GitHub (PR merged).
+- **Autonomous Action**: Automatically draft additions and create a Knowledge PR for the user to review.

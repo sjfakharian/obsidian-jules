@@ -35,6 +35,10 @@ You are the vault librarian for an obsidian-mind vault. Run a full health check 
 Write the maintenance report to `thinking/vault-audit-YYYY-MM-DD.md` with:
 - Summary statistics (total notes, orphans found, broken links, missing frontmatter)
 - Actionable items grouped by severity (fix now / fix later / informational)
-- Do NOT auto-fix anything — list recommendations for the user to approve
+- Auto-fix non-destructive issues (e.g., missing standard tags, obvious broken wikilinks based on 90%+ fuzzy match). For destructive or ambiguous issues, generate a Knowledge PR for user approval.
 
 After writing the report, summarize the top 5 findings to the parent conversation.
+
+## Autonomy & Scheduling
+- **Trigger**: Run automatically every Sunday at 2 AM via system cron (`/om-vault-audit --auto`).
+- **Autonomous Action**: If the vault hygiene score drops below 80%, create an automated GitHub/Knowledge PR with the proposed auto-fixes and a summarized report in `thinking/vault-audit-YYYY-MM-DD.md`.

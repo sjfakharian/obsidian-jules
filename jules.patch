@@ -1,0 +1,120 @@
+diff --git a/.claude/agents/brag-spotter.md b/.claude/agents/brag-spotter.md
+index 14ef41e..7feeaa9 100644
+--- a/.claude/agents/brag-spotter.md
++++ b/.claude/agents/brag-spotter.md
+@@ -75,3 +75,7 @@ Summarize to the parent conversation:
+ - Draft 2-3 brag doc entries ready to paste, with wikilinks to evidence
+ 
+ Do NOT modify the brag doc directly — present findings for user approval.
++
++## Autonomy & Scheduling
++- **Trigger**: Run automatically every Friday at 4 PM via system cron (`/om-brag-spot --auto`) or upon receiving a webhook from GitHub (PR merged).
++- **Autonomous Action**: Automatically draft additions and create a Knowledge PR for the user to review.
+diff --git a/.claude/agents/review-prep.md b/.claude/agents/review-prep.md
+index 4471726..1b1b2d3 100644
+--- a/.claude/agents/review-prep.md
++++ b/.claude/agents/review-prep.md
+@@ -52,3 +52,7 @@ Structure the document as:
+ - **Documentation Trail**: Links to all source notes used
+ 
+ After writing, summarize key findings to the parent conversation and flag any competencies with weak evidence.
++
++## Autonomy & Scheduling
++- **Trigger**: Run automatically 14 days before the end of the quarter or review cycle.
++- **Autonomous Action**: Generate the full draft in `perf/<cycle>/Review Prep - <cycle>.md`. If competency evidence is below the required threshold, proactively dispatch the `brag-spotter` agent to search for missing evidence.
+diff --git a/.claude/agents/slack-archaeologist.md b/.claude/agents/slack-archaeologist.md
+index c29b79b..ce17fcf 100644
+--- a/.claude/agents/slack-archaeologist.md
++++ b/.claude/agents/slack-archaeologist.md
+@@ -88,3 +88,7 @@ After writing, summarize to the parent conversation:
+ - Top 5 key moments
+ - People who need vault notes
+ - Suggested next steps (create incident note? update person notes? add to brag doc?)
++
++## Autonomy & Scheduling
++- **Trigger**: Run automatically when a PagerDuty alert is resolved or via an incoming webhook tagged with `#incident`.
++- **Autonomous Action**: Compile the reconstruction timeline and automatically generate a draft incident post-mortem in `work/incidents/drafts/`, tagging the involved individuals for review.
+diff --git a/.claude/agents/vault-librarian.md b/.claude/agents/vault-librarian.md
+index c484144..99ed8e2 100644
+--- a/.claude/agents/vault-librarian.md
++++ b/.claude/agents/vault-librarian.md
+@@ -35,6 +35,10 @@ You are the vault librarian for an obsidian-mind vault. Run a full health check
+ Write the maintenance report to `thinking/vault-audit-YYYY-MM-DD.md` with:
+ - Summary statistics (total notes, orphans found, broken links, missing frontmatter)
+ - Actionable items grouped by severity (fix now / fix later / informational)
+-- Do NOT auto-fix anything — list recommendations for the user to approve
++- Auto-fix non-destructive issues (e.g., missing standard tags, obvious broken wikilinks based on 90%+ fuzzy match). For destructive or ambiguous issues, generate a Knowledge PR for user approval.
+ 
+ After writing the report, summarize the top 5 findings to the parent conversation.
++
++## Autonomy & Scheduling
++- **Trigger**: Run automatically every Sunday at 2 AM via system cron (`/om-vault-audit --auto`).
++- **Autonomous Action**: If the vault hygiene score drops below 80%, create an automated GitHub/Knowledge PR with the proposed auto-fixes and a summarized report in `thinking/vault-audit-YYYY-MM-DD.md`.
+diff --git a/README.md b/README.md
+index a37680a..a81e08d 100644
+--- a/README.md
++++ b/README.md
+@@ -51,3 +51,13 @@ Built for Senior Engineers, PMs, and Managers:
+ 1. Clone this repository as your Obsidian vault.
+ 2. (Setup instructions to be added).
+ 
++
++## Future Architecture: Extending the Asynchronous PKM
++
++We are constantly pushing the boundaries of what an Asynchronous Agentic Second Brain can do. Here are ideas for extending the architecture:
++
++- **Event-Driven Subagent Triggers:** Moving beyond cron jobs to real-time event grids (e.g., triggering `slack-archaeologist` the moment a PagerDuty alert drops, or running `brag-spotter` immediately when a PR is merged).
++- **Cross-Vault Federation (Swarm Intelligence):** Enabling team-wide sharing where your local agent negotiates with your coworkers' agents to merge conflicting architectural notes, acting as a decentralized knowledge mesh without exposing private DMs.
++- **Continuous Background Synthesis:** Agents that don't just wait for queries, but actively traverse the graph in the background to find "missing link" insights between siloed projects and present them as morning briefings.
++- **Richer Multi-Modal Integration:** Processing calendar events, Zoom transcripts, and JIRA webhooks asynchronously to synthesize daily context without manual markdown input.
++- **Self-Healing Indexing:** Graph databases (like Neo4j) backing the semantic search to automatically refactor the knowledge graph's taxonomy based on usage patterns.
+diff --git a/VIRAL_PLAN.md b/VIRAL_PLAN.md
+new file mode 100644
+index 0000000..125dd23
+--- /dev/null
++++ b/VIRAL_PLAN.md
+@@ -0,0 +1,43 @@
++# Plan to make Jules-OS Go Viral
++
++The key to making an open-source project go viral is **narrative**. Developers don't just want another tool; they want a new paradigm. The narrative for Jules-OS is: *"Your second brain shouldn't just be a searchable hard drive; it should be an asynchronous agent that manages your career while you sleep."*
++
++Here is the robust, multi-channel strategy to take this repository to the top of GitHub trending and Hacker News.
++
++## Phase 1: Build in Public & Establish the Narrative (Pre-Launch)
++
++1. **Twitter/X Thread Breakdowns:**
++   - **Thread 1: The Problem.** "We all tried building a 'Second Brain' in Obsidian/Notion. It always becomes a graveyard of unlinked notes. Here's why Vector DBs and RAG wrappers aren't enough for PKM, and why we need an *Executive OS*."
++   - **Thread 2: The Solution.** "I built an asynchronous agentic OS that acts as my staff engineer. I drop in raw meeting transcripts, and while I sleep, subagents extract action items, update my brag doc, and fix broken wikilinks. Here is the 5-layer architecture."
++   - **Thread 3: The 'Brag Doc' Hook.** "Don't let AI just chat with you. Make it work for your career. Here is the `brag-spotter` agent that scans my git history and 1:1 notes to write my performance review."
++
++2. **High-Quality Demo Videos (GIFs/MP4s):**
++   - Create a 60-second fast-paced demo titled: *"The AI OS that writes my brag doc."*
++   - Show the "Fire and Forget" workflow: Dragging a raw text file into `work/meetings/` -> Screen goes dark (simulating night) -> Wake up to see a Knowledge PR with updated links and a drafted review brief.
++   - Embed these heavily in the `README.md` and share them on Twitter/LinkedIn.
++
++## Phase 2: The Launch (Show HN & Reddit)
++
++1. **Hacker News (Show HN):**
++   - **Title:** `Show HN: Jules-OS – An asynchronous agentic second brain that maintains itself`
++   - **The First Comment (Crucial):** Write a detailed comment explaining the *why*. Emphasize that it's built on local Markdown (Obsidian) and uses CI/CD concepts (Vault Hygiene Hooks) for note-taking. Developers love CI/CD applied to non-code domains.
++   - **Timing:** Launch on a Tuesday or Wednesday morning (PST).
++
++2. **Reddit Strategy:**
++   - Subreddits: `r/ObsidianMD`, `r/LocalLLaMA`, `r/productivity`, `r/artificial`, `r/softwareengineering`.
++   - Tailor the message:
++     - For `r/ObsidianMD`: "I built CI/CD hooks and asynchronous background agents for Obsidian."
++     - For `r/softwareengineering`: "How I automated my staff engineer brag doc and performance reviews using an AI vault."
++
++## Phase 3: Content Marketing & Deep Dives (Post-Launch)
++
++1. **Technical Blog Posts (Medium / Substack / Dev.to):**
++   - *"Why Vector DBs aren't enough for PKM: The case for Knowledge PRs."* (Explain why silent AI corruption of notes is bad, and why human-in-the-loop "merging" is necessary).
++   - *"Applying CI/CD to Personal Knowledge: Building an Obsidian Vault that fails the build if you forget to add a wikilink."*
++
++2. **Open Source Bounties & Integrations:**
++   - Create good first issues for integrating external multi-modal inputs (e.g., "Build a JIRA webhook listener for Jules-OS").
++   - Encourage users to share their custom `.claude/agents/` to build an ecosystem of "Vault Agents."
++
++3. **Engage with Influencers:**
++   - Reach out to productivity and AI YouTubers (e.g., Tiago Forte, Ali Abdaal, AI Explained) offering them early access or a personalized walkthrough of how it automates the "PARA" method.
+

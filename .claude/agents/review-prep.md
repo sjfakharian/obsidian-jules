@@ -52,3 +52,7 @@ Structure the document as:
 - **Documentation Trail**: Links to all source notes used
 
 After writing, summarize key findings to the parent conversation and flag any competencies with weak evidence.
+
+## Autonomy & Scheduling
+- **Trigger**: Run automatically 14 days before the end of the quarter or review cycle.
+- **Autonomous Action**: Generate the full draft in `perf/<cycle>/Review Prep - <cycle>.md`. If competency evidence is below the required threshold, proactively dispatch the `brag-spotter` agent to search for missing evidence.

@@ -200,6 +200,39 @@ describe("validate-write — performance", () => {
 			`validate-write took ${elapsed.toFixed(1)}ms on ~1MB note (budget 1500ms; includes subprocess spawn)`,
 		);
 	});
+
+	test("massive 50MB log file is gracefully skipped without memory leaks", () => {
+		const path = join(TMP_DIR, "massive.md");
+		// Create a 50MB file using a buffer to simulate a massive log drop
+		const buffer = Buffer.alloc(50 * 1024 * 1024, "A");
+		writeFileSync(path, buffer);
+
+		const start = performance.now();
+		const { code, stdout } = runScript({ tool_input: { file_path: path } });
+		const elapsed = performance.now() - start;
+
+		assert.equal(code, 0);
+		// A 50MB file exceeds the 5MB skip threshold, so no frontmatter warnings
+		// should be generated, but it will trigger the monolith check (>= 25KB).
+		const parsed = JSON.parse(stdout) as {
+			hookSpecificOutput: {
+				additionalContext: string;
+				policyResults?: Array<{ policy_id: string; classification: string }>;
+			};
+		};
+		assert.ok(
+			parsed.hookSpecificOutput.additionalContext.includes("organization threshold"),
+			"Should still emit monolith organization warnings",
+		);
+		assert.ok(
+			!parsed.hookSpecificOutput.additionalContext.includes("Vault hygiene warnings for"),
+			"Should skip frontmatter validation entirely for massive files",
+		);
+		assert.ok(
+			elapsed < 1500,
+			`validate-write took ${elapsed.toFixed(1)}ms on 50MB note (budget 1500ms)`,
+		);
+	});
 });
 
 // --- Type safety ---

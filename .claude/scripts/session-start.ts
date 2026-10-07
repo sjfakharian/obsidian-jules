@@ -335,24 +335,23 @@ function readMarkdownSource(
 	}
 }
 
-function listMarkdownSources(
+function* listMarkdownSources(
 	dir: string,
 	pathFor: (name: string) => string,
 	skip: (name: string) => boolean = () => false,
-): { path: string; content: string }[] {
+): Iterable<{ path: string; content: string }> {
 	let entries: Dirent[];
 	try {
 		entries = readdirSync(dir, { withFileTypes: true });
 	} catch {
-		return [];
+		return;
 	}
-	const sources: { path: string; content: string }[] = [];
+	entries.sort((a, b) => b.name.localeCompare(a.name));
 	for (const e of entries) {
 		if (!e.isFile() || !isMarkdownFilename(e.name) || skip(e.name)) continue;
 		const src = readMarkdownSource(pathFor(e.name));
-		if (src !== null) sources.push(src);
+		if (src !== null) yield src;
 	}
-	return sources;
 }
 
 function openTasks(): string {
@@ -363,15 +362,16 @@ function openTasks(): string {
 	// Infra files (CLAUDE.md, README.*.md, …) are excluded so the section is
 	// user content only. Paths use forward slashes so the output reads the same
 	// in Claude's context on any OS.
-	const sources = [
-		...listMarkdownSources("work/active", (name) => `work/active/${name}`),
-		...listMarkdownSources(
+	function* getSources() {
+		yield* listMarkdownSources("work/active", (name) => `work/active/${name}`);
+		yield* listMarkdownSources("daily", (name) => `daily/${name}`);
+		yield* listMarkdownSources(
 			".",
 			(name) => name,
 			(name) => isInfraFilename(name, infraRootFilenames),
-		),
-	];
-	return collectOpenTasks(sources, 10);
+		);
+	}
+	return collectOpenTasks(getSources(), 10);
 }
 
 function brainIndex(): string {

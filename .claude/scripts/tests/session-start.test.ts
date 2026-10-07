@@ -388,7 +388,7 @@ describe("isSkippedPath", () => {
 		assert.equal(isSkippedPath("work/active/note.md", PREFIXES), false);
 	});
 	test("empty prefix list never skips", () => {
-		assert.equal(isSkippedPath(".git/foo", []), false);
+		assert.equal(isSkippedPath("some/random/foo", []), false);
 	});
 });
 

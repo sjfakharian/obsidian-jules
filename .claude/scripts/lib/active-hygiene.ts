@@ -318,20 +318,37 @@ export function walkMarkdown(root: string, relDir: string): string[] {
 	return out;
 }
 
-function findCompletedInActive(root: string): string[] {
+async function findCompletedInActive(root: string): Promise<string[]> {
 	const found: string[] = [];
-	for (const rel of walkMarkdown(root, ACTIVE_REL)) {
-		let content: string;
-		try {
-			content = readFileSync(join(root, rel), "utf-8");
-		} catch {
-			continue;
-		}
-		const status = extractFrontmatterField(content, "status");
-		if (status && ARCHIVABLE_STATUS.has(status.toLowerCase())) {
-			found.push(rel);
+	const files = walkMarkdown(root, ACTIVE_REL);
+	const { readFile } = await import("node:fs/promises");
+
+	// Batch concurrency to avoid EMFILE (too many open files) and unblock thread
+	const concurrency = 50;
+	let i = 0;
+
+	async function worker() {
+		while (i < files.length) {
+			const rel = files[i++];
+			let content: string;
+			try {
+				content = await readFile(join(root, rel), "utf-8");
+			} catch {
+				continue;
+			}
+			const status = extractFrontmatterField(content, "status");
+			if (status && ARCHIVABLE_STATUS.has(status.toLowerCase())) {
+				found.push(rel);
+			}
 		}
 	}
+
+	const workers: Promise<void>[] = [];
+	for (let j = 0; j < Math.min(concurrency, files.length); j++) {
+		workers.push(worker());
+	}
+	await Promise.all(workers);
+
 	return found.sort();
 }
 
@@ -630,15 +647,15 @@ export function formatMonolithHint(path: string, sizeBytes: number): string {
 	return `📐 \`${path}\` is now ${Math.round(sizeBytes / 1000)}KB — past the ${MONOLITH_BYTES / 1000}KB organization threshold. Do NOT trim the content; SPLIT it while you have the context: domain notes / event-log satellites / a cluster folder, moved verbatim, with a one-liner index left behind and inbound links retargeted. If a split genuinely doesn't fit yet, say why in the session instead of ignoring this.`;
 }
 
-export function scanActiveHygiene(
+export async function scanActiveHygiene(
 	root: string,
 	nowMs: number = Date.now(),
 	openLoopConfig: OpenLoopConfig = parseOpenLoopConfig(null),
 	infraRootFilenames: readonly string[] = [],
 	memoryRoot: string = MEMORY_ROOT_DEFAULT,
-): ActiveHygieneReport {
+): Promise<ActiveHygieneReport> {
 	return {
-		completedInActive: findCompletedInActive(root),
+		completedInActive: await findCompletedInActive(root),
 		ungroupedClusters: findUngroupedClusters(root),
 		oversizedNotes: findOversizedNotes(root, infraRootFilenames),
 		openLoops: findOpenLoops(root, nowMs, openLoopConfig),

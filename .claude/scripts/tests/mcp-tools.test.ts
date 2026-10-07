@@ -11,8 +11,16 @@ describe("mcp-tools", () => {
 	test("each tool should match the ToolDef interface", () => {
 		for (const tool of TOOLS) {
 			assert.ok(typeof tool.name === "string" && tool.name.length > 0, `Tool missing name: ${JSON.stringify(tool)}`);
+			
+			// Name character validation (no spaces, alphanumeric/hyphens/underscores)
+			assert.match(tool.name, /^[a-zA-Z0-9_-]+$/, `Tool name '${tool.name}' contains invalid characters (only alphanumeric, hyphens, underscores allowed)`);
+
 			assert.ok(typeof tool.description === "string" && tool.description.length > 0, `Tool ${tool.name} missing description`);
+			
+			// inputSchema validations
 			assert.ok(typeof tool.inputSchema === "object" && tool.inputSchema !== null, `Tool ${tool.name} missing inputSchema`);
+			assert.strictEqual(tool.inputSchema.type, "object", `Tool ${tool.name} inputSchema.type must be "object"`);
+			assert.ok(typeof tool.inputSchema.properties === "object", `Tool ${tool.name} missing inputSchema.properties`);
 
 			assert.ok(typeof tool.annotations === "object" && tool.annotations !== null, `Tool ${tool.name} missing annotations`);
 			assert.ok(typeof tool.annotations.title === "string" && tool.annotations.title.length > 0, `Tool ${tool.name} missing annotation title`);

@@ -1,0 +1,34 @@
+# Development dependencies and machine-specific files
+node_modules/
+.DS_Store
+Thumbs.db
+coverage/
+*.tsbuildinfo
+
+# Local credentials: keep the documented example available
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+credentials.json
+client_secret*.json
+token.json
+
+# Agent-local state and generated transcripts
+.claude/settings.local.json
+.claude/om-mcp-audit.jsonl
+.claude/scripts/.hint-state.json
+.claude/scripts/.qmd-refresh-sentinel
+thinking/session-logs/
+*.log
+
+# Local indexes and databases
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+
+# This does not remove files already tracked by Git.

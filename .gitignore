@@ -1,9 +1,44 @@
+# Existing benchmark fixtures
+benchmark_root/
+
+# Development dependencies and machine-specific files
 node_modules/
 !.claude/scripts/node_modules/
-.env
 .DS_Store
+Thumbs.db
+coverage/
+*.tsbuildinfo
 *.swp
-.obsidian/
 *.lock
+
+# Personal Obsidian settings
+.obsidian/
+
+# Local credentials: keep the documented example available
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+credentials.json
+client_secret*.json
+token.json
+
+# Agent-local state and generated transcripts
+.claude/settings.local.json
 .claude/om-mcp-audit.jsonl
 .claude/om-reasoning/
+.claude/scripts/.hint-state.json
+.claude/scripts/.qmd-refresh-sentinel
+thinking/session-logs/
+*.log
+
+# Local indexes and databases
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+
+# This does not remove files already tracked by Git.

@@ -1,236 +1,106 @@
-<div align="center">
+# Obsidian-Jules
 
-# 🧠 Obsidian-Jules
-**An asynchronous, CI/CD-inspired Executive OS for your Obsidian knowledge base**
+**Reviewable AI-assisted maintenance for an Obsidian knowledge base.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/sjfakharian/obsidian-jules/actions/workflows/ci.yml/badge.svg)](https://github.com/sjfakharian/obsidian-jules/actions/workflows/ci.yml)
-[![Obsidian Compatible](https://img.shields.io/badge/Obsidian-Compatible-blueviolet.svg)](https://obsidian.md)
-[![Subagents](https://img.shields.io/badge/subagents-13-green.svg)]()
-[![Hygiene Hooks](https://img.shields.io/badge/hooks-5-orange.svg)]()
-[![PRs](https://img.shields.io/badge/Knowledge_PRs-Enabled-success.svg)]()
+[![Status: Experimental](https://img.shields.io/badge/status-experimental-orange.svg)](docs/PROJECT_STATUS.md)
 
-*Most AI note-taking tools just "read" your text. **Obsidian-Jules** explores a different model: reviewable agents that maintain, challenge, and improve a long-lived knowledge system.*
+Keep knowledge in Markdown. Use specialized Claude Code agents and lifecycle hooks to organize notes, inspect links, and prepare proposed changes. Review the result before treating it as trusted knowledge.
 
-[Get Started](#-quick-start) • [How it Works](#-the-asynchronous-paradigm) • [Meet the Agents](#-meet-your-autonomous-team) • [Roadmap](#-future-architecture)
+[Quick start](docs/QUICKSTART.md) · [Implementation status](docs/PROJECT_STATUS.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
-</div>
+> **Early-stage scaffold, not an unattended service.** Agent definitions and hook scripts are included. Scheduled cloud jobs, external connectors, and a universal approval gate are not installed merely by cloning this repository. See the implementation status before relying on a workflow.
 
+## What problem does it address?
 
----
+A useful knowledge base needs maintenance: broken links need attention, meeting notes need context, and review drafts need evidence. Obsidian-Jules explores applying software-engineering habits to that work: small changes, source links, validation, and human review.
 
-## 🚧 Project Status
+The central workflow is:
 
-Obsidian-Jules is an **early-stage open-source project** and is evolving quickly. The repository is usable today as a reference implementation and starter vault, but some automation paths and integrations remain experimental.
+**Capture → inspect → propose → review → accept.**
 
-The local execution path is built around **Claude Code** plus repository-level instructions, specialized agents, and lifecycle hooks. A separate cloud path can use **Google Jules** for asynchronous background tasks and GitHub-based Knowledge PRs.
+A "Knowledge PR" is a reviewable proposal or Git branch/pull request for a knowledge change. It is a workflow convention here, not proof that every possible write is technically prevented. Local agents have file-editing tools; keep backups and review permissions.
 
-The project is intentionally review-first: AI-generated changes should be inspectable before they become durable knowledge.
+## What is included?
 
----
+| Component | Repository evidence | Boundary |
+| --- | --- | --- |
+| Specialized agent definitions | [`.claude/agents/`](.claude/agents) | Prompts and tool policies; execution depends on the chosen runner. |
+| Reusable workflows | [`.claude/commands/`](.claude/commands) | Commands for capture, audits, review preparation, and related tasks. |
+| Claude Code hook configuration | [`.claude/settings.json`](.claude/settings.json) | Runs on matching Claude Code events, not on every edit made directly in Obsidian. |
+| TypeScript hook and helper code | [`.claude/scripts/`](.claude/scripts) | Includes validation, context, memory, and MCP-related helpers. |
+| Test sources and CI configuration | [Tests](.claude/scripts/tests) and [CI](.github/workflows/ci.yml) | See actual workflow results; their presence alone does not establish a passing suite. |
+| Note templates and Base views | [`templates/`](templates) and [`bases/`](bases) | Adapt their referenced paths and schemas to your own private vault. |
+| Optional semantic-search integration | [QMD adapter](.claude/scripts/qmd-mcp.mjs) | Requires a separately configured QMD installation and index. |
 
-## 🛑 The Problem with "Second Brains"
+Examples include `vault-librarian` for audits, `brag-spotter` for finding evidence of accomplishments, `review-prep` for review preparation, and `correction-sweep` for locating repeated claims. Read each definition before granting access to your files or accounts.
 
-Building a knowledge base is easy. **Keeping it alive is hard.**
-
-Traditional Personal Knowledge Management (PKM) systems inevitably devolve into graveyards of unlinked notes. General AI wrappers just let you "chat" with your notes, but they don't *maintain* the system. You still have to do the heavy lifting of organization, extracting insights from 1-1s, and writing your own performance reviews.
-
-We need more than a chatbot. We need an **Executive OS**.
-
----
-
-## ⚡ The Asynchronous Paradigm
-
-**Obsidian-Jules** borrows the best paradigms from modern Software Engineering (like Google's Jules agent) and applies them to your personal knowledge base:
-
-| Traditional PKM | Obsidian-Jules OS |
-| :--- | :--- |
-| **Manual Data Entry** | **Fire & Forget:** Drop raw meeting transcripts into a folder. Background agents process them, extract action items, and link them to the graph automatically. |
-| **Silent AI Corruption** | **Knowledge PRs:** Agents *never* overwrite your core files. They create a `Proposed` state (Knowledge Pull Request). You act as the Tech Lead and merge. |
-| **Decaying Links** | **Vault CI/CD:** A note without a link is a bug. Lifecycle hooks (`SessionStart`, `PostToolUse`) act as a CI pipeline. If hygiene drops, agents fix it. |
-| **Echo Chamber** | **Adversarial Review:** Subagents are explicitly designed to challenge your `Key Decisions` using Socratic dialogue. |
-
----
-
-## 🏗️ The 5-Layer Architecture
-
-This isn't just a folder of markdown files. It's a living operating system.
+## How the pieces fit
 
 ```mermaid
-graph TD
-    subgraph L5 [L5: Execution Ecosystem]
-        B[brag-spotter]
-        S[slack-archaeologist]
-        V[vault-librarian]
-    end
-
-    subgraph L4 [L4: Automations]
-        C[Cloud Batch / Cron Jobs]
-        C -->|Nightly Refactors| L5
-    end
-
-    subgraph L3 [L3: Logic & Rules]
-        H[CLAUDE.md + CI Hooks]
-        H -->|Validates Writes| L4
-    end
-
-    subgraph L2 [L2: Engine]
-        Q[QMD Semantic Vector Search]
-    end
-
-    subgraph L1 [L1: Storage]
-        O[(Obsidian Vault - Local Markdown)]
-    end
-
-    L5 --> H
-    H --> Q
-    Q --> O
+flowchart TD
+    U[User] --> C[Claude Code session]
+    C --> A[Repository instructions and specialized agents]
+    C --> H[Configured lifecycle hooks]
+    A --> V[Markdown notes and Obsidian views]
+    H --> V
+    C -. optional configured retrieval .-> Q[QMD]
+    Q --> V
+    A --> P[Proposed changes]
+    P --> R[Human review]
+    J[Optional Google Jules task] -. authorized GitHub repository .-> P
 ```
 
----
+Claude Code is the local execution path. Google Jules is an optional external task runner; it is not installed, authenticated, or scheduled by this project. The two products have separate accounts, permissions, and usage terms. Neither integration implies endorsement by Anthropic, Google, or Obsidian.
 
-## 🤖 Meet Your Autonomous Team
+## Start with a disposable copy
 
-Your vault comes pre-configured with specialized subagents living in `.claude/agents/`:
+Use Git, Obsidian, and a recent Node.js release supporting TypeScript type stripping; Node.js 22.18+ is a conservative starting point for the bundled hook commands. Install and authenticate Claude Code using its [official instructions](https://code.claude.com/docs/en/overview).
 
-- 🏆 **`brag-spotter`**: Scans your git history, 1:1 notes, and incident reports to automatically draft your performance reviews and brag documents.
-- 🕵️ **`slack-archaeologist`**: Triggered by PagerDuty alerts. Automatically compiles reconstruction timelines and drafts incident post-mortems in `work/incidents/drafts/`.
-- 📚 **`vault-librarian`**: Runs every Sunday at 2 AM. If your vault's hygiene score drops below 80%, it auto-fixes missing tags and creates a PR for broken links.
-- 🎯 **`review-prep`**: Wakes up 14 days before the end of the quarter, analyzes your competency tracking, and generates a draft review brief.
-
----
-
-## 📂 Folder Structure (The Executive Layout)
-
-Optimized for Senior Engineers, PMs, and Managers:
-
-```text
-obsidian-jules/
-├── .claude/         # 🧠 The Engine: Agents, Hooks, and CI scripts
-├── bases/           # 📊 Database views for your Markdown files
-├── brain/           # 🌐 Durable, graph-first knowledge & Key Decisions
-├── org/             # 👥 Personal CRM: People, teams, and interactions
-├── perf/            # 🚀 Career Management: Brag docs & competencies
-├── templates/       # 📄 Standardized markdown templates
-└── work/            # 💼 Active tracking: 1-1s, incidents, sprints
+```sh
+git clone https://github.com/sjfakharian/obsidian-jules.git obsidian-jules-sandbox
+cd obsidian-jules-sandbox
+node --version
 ```
 
----
+Read [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md), and [the hook configuration](.claude/settings.json) before starting an agent. Open the folder as a vault in Obsidian and begin with synthetic notes, not private meeting transcripts.
 
-## ⚙️ Prerequisites
+The npm package is under `.claude/scripts`, **not at the repository root**. To install its declared development dependency and invoke its existing tests:
 
-Before you start, ensure you have:
-1. **[Obsidian](https://obsidian.md)** (Free) — The visual UI for your Markdown knowledge graph.
-2. **[Node.js 20+](https://nodejs.org)** — Executes the TypeScript lifecycle hooks and automated test suite.
-3. **An Agent Runner** — Choose **Option A (Local Co-Pilot)**, **Option B (Cloud Jules Agent)**, or the **Hybrid Setup** below.
-
----
-
-## 🚀 Quick Start: Choose Your Agent Engine
-
-You can run **Obsidian-Jules** in the mode that fits your workflow:
-
-```
-                      ┌───────────────────────────────────────┐
-                      │          Obsidian-Jules Vault         │
-                      └──────────────────┬────────────────────┘
-                                         │
-                 ┌───────────────────────┴───────────────────────┐
-                 ▼                                               ▼
-       [ Option A: Local Mode ]                       [ Option B: Cloud Mode ]
-          Local AI Co-Pilot                             Autonomous Cloud Agent
-        (Claude Code / Local CLI)                           (Google Jules)
-                 │                                               │
-  • Real-time edit validation                     • "Fire and Forget" background tasks
-  • Intercepts broken links as you type           • Overnight vault refactoring & audits
-  • Instant chat with notes in terminal           • Auto-generates Knowledge PRs on GitHub
+```sh
+npm --prefix .claude/scripts install
+npm --prefix .claude/scripts test
 ```
 
-### 1. Clone the Vault
-```bash
-git clone https://github.com/sjfakharian/obsidian-jules.git my-second-brain
-cd my-second-brain
-npm install
+These are the package's test commands, not a claim that a complete clean-machine run has been verified for your environment. Type checking has separate development-tool prerequisites described in the [quick start](docs/QUICKSTART.md).
+
+Then start a Claude Code session from the vault root:
+
+```sh
+claude
 ```
-Open the `my-second-brain` folder as an existing vault in [Obsidian](https://obsidian.md).
 
----
+For a cautious first session, ask it to inspect the structure and suggest an audit plan without modifying files. Review the plan and any subsequent diff before accepting edits. Authentication may use an eligible Claude subscription or a supported API configuration; an API key is not the only sign-in option.
 
-### 2. Choose Your Execution Path
+## What is experimental?
 
-#### 🟢 Option A: Local Co-Pilot (Claude Code / Local CLI)
-*Best for: Interactive note-taking, real-time link validation, and terminal chatting while in Obsidian.*
+Scheduled Sunday audits, PagerDuty-triggered incident work, quarter-end review jobs, and unattended Knowledge PR generation appear as ideas or instructions in agent files. They require an actual scheduler, integration code, and credentials before they can operate. A schedule written in Markdown does not install a job.
 
-1. Install [Claude Code](https://claude.ai/code):
-   ```bash
-   npm install -g @anthropic-ai/claude-code
-   ```
-2. Set your Anthropic API Key:
-   ```bash
-   export ANTHROPIC_API_KEY="your-api-key"
-   ```
-3. Start the OS in your vault directory:
-   ```bash
-   claude
-   ```
-   *The lifecycle hooks in `.claude/` will automatically run: validating note sizes, checking wikilinks, and guiding note creation.*
+The bundled `CLAUDE.md` and manifest also contain deployment-specific references not all present in this public export. This is not yet a one-command, fully populated personal vault. [The status document](docs/PROJECT_STATUS.md) records the boundary and the next engineering work.
 
----
+## Privacy and safe operation
 
-#### 🔵 Option B: Cloud Autonomous Agent (Google Jules)
-*Best for: Asynchronous "fire-and-forget" workflows, background audits, and GitHub Knowledge PRs.*
+Local Markdown storage does **not** make cloud inference local. Claude Code, Jules, and configured connectors may transmit selected content to their providers. Review their permissions and terms before using sensitive material.
 
-1. Push your vault to a private (or public) GitHub repository.
-2. Install the [Jules CLI](https://jules.google.com):
-   ```bash
-   # Follow instructions at https://jules.google.com
-   export JULES_API_KEY="your-jules-api-key"
-   # Or authenticate via:
-   jules login
-   ```
-3. Dispatch background tasks from your terminal:
-   ```bash
-   # Audit vault hygiene and submit a Knowledge PR:
-   jules new "Audit vault hygiene, fix broken wikilinks, and create a Knowledge PR"
+Some helpers can write notes, indexes, or session backups. Inspect the scripts, keep a recoverable Git history or separate backup, and use a private repository for a real personal vault. Never publish API keys, work transcripts, personnel records, or generated session logs in this public project. A `.gitignore` is a precaution, not a security boundary or a way to erase previously committed files.
 
-   # Extract accomplishments from raw meeting notes:
-   jules new "Process work/meetings/ notes from this week and draft updates to perf/brag/"
-   ```
-4. Review and merge the Knowledge PR in GitHub or pull directly via the Jules CLI:
-   ```bash
-   jules remote list --session
-   jules remote pull --session <SESSION_ID> --apply
-   ```
+## Contributing
 
----
+Focused contributions are welcome: reproducible hook tests, safe-write behavior, portable setup, documentation, and explicit separation between implemented code and proposed automation. See [CONTRIBUTING.md](CONTRIBUTING.md) and [the maintainer checklist](docs/MAINTAINER_CHECKLIST.md).
 
-#### ⚡ Option C: The Hybrid Setup (Recommended)
-Use **Option A (Claude Code)** during the day while you take notes in Obsidian (preventing broken links and enforcing structure), and let **Option B (Google Jules)** run background maintenance, incident post-mortems, and Knowledge PRs while you sleep.
+## Acknowledgments and license
 
+This project includes code and conventions adapted from [Obsidian Mind](https://github.com/breferrari/obsidian-mind), including the vault hook/helper foundation. Bundled Obsidian skills are sourced from [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills), as identified by the skill updater. These are upstream contributions, not original work claimed by this repository.
 
----
-
-## 🤝 Contributing
-
-Contributions are welcome, especially around agent safety, hook reliability, knowledge-graph hygiene, testing, and reproducible workflows.
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Bug reports and focused feature proposals are welcome through GitHub Issues.
-
----
-
-## 🔮 Future Architecture
-
-We are constantly pushing the boundaries of what an Asynchronous Agentic Second Brain can do:
-
-- **Event-Driven Triggers:** Moving beyond cron jobs to real-time event grids (e.g., triggering `brag-spotter` immediately when a PR is merged).
-- **Cross-Vault Federation (Swarm Intelligence):** Enabling team-wide sharing where your local agent negotiates with coworkers' agents to merge conflicting architectural notes—without exposing private DMs.
-- **Continuous Background Synthesis:** Agents actively traverse the graph in the background to find "missing link" insights between siloed projects and present them as morning briefings.
-- **Richer Multi-Modal Integration:** Processing calendar events, Zoom transcripts, and Jira webhooks asynchronously.
-- **Self-Healing Indexing:** Graph databases (like Neo4j) backing the semantic search to automatically refactor the taxonomy based on usage patterns.
-
----
-
-<div align="center">
-  <b>Built for those who want their tools to work for them, not the other way around.</b><br>
-  ⭐️ If you find this project useful, please consider giving it a star!
-</div>
+Project modifications are MIT-licensed. Retain the [project license](LICENSE), the upstream notices in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), and any component-specific licenses. The notices document confirmed sources; a complete vendored-component provenance audit remains maintenance work.

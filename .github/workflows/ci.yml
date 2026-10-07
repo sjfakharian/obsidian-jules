@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 22 with TypeScript support
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.21.0'
+
+      # The exported hook package has no committed lockfile yet. Do not
+      # configure a cache for a nonexistent lockfile or run npm ci without it.
+      # A reviewed, committed lockfile should replace this bootstrap step.
+      - name: Install declared hook development dependencies
+        working-directory: .claude/scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Run existing hook tests
+        working-directory: .claude/scripts
+        run: npm test

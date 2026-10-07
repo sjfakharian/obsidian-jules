@@ -27,7 +27,7 @@ gh repo edit sjfakharian/obsidian-jules --add-topic obsidian,claude-code,knowled
 
 ## Acceptance work still needed
 
-Run a clean-machine setup and the nested test/typecheck commands. Record the exact commit and tool versions. Resolve tracked generated files and undeclared tooling in separate reviewed changes. Exercise a synthetic note workflow before using private content or enabling background runners.
+Run a clean-machine setup and the nested test/typecheck commands. Record the exact commit and tool versions. Consult CI results rather than assuming a workflow file means success. Resolve tracked generated files and undeclared tooling in separate reviewed changes. Exercise a synthetic note workflow before using private content or enabling background runners.
 
 ## Open-source support applications
 

@@ -3,6 +3,7 @@
 **Reviewable AI-assisted maintenance for an Obsidian knowledge base.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![CI](https://github.com/sjfakharian/obsidian-jules/actions/workflows/ci.yml/badge.svg)](https://github.com/sjfakharian/obsidian-jules/actions/workflows/ci.yml)
 [![Status: Experimental](https://img.shields.io/badge/status-experimental-orange.svg)](docs/PROJECT_STATUS.md)
 
 Keep knowledge in Markdown. Use specialized Claude Code agents and lifecycle hooks to organize notes, inspect links, and prepare proposed changes. Review the result before treating it as trusted knowledge.
@@ -29,7 +30,7 @@ A "Knowledge PR" is a reviewable proposal or Git branch/pull request for a knowl
 | Reusable workflows | [`.claude/commands/`](.claude/commands) | Commands for capture, audits, review preparation, and related tasks. |
 | Claude Code hook configuration | [`.claude/settings.json`](.claude/settings.json) | Runs on matching Claude Code events, not on every edit made directly in Obsidian. |
 | TypeScript hook and helper code | [`.claude/scripts/`](.claude/scripts) | Includes validation, context, memory, and MCP-related helpers. |
-| Test sources | [`.claude/scripts/tests/`](.claude/scripts/tests) | Test presence is not a claim of a passing current CI run. |
+| Test sources and CI configuration | [Tests](.claude/scripts/tests) and [CI](.github/workflows/ci.yml) | See actual workflow results; their presence alone does not establish a passing suite. |
 | Note templates and Base views | [`templates/`](templates) and [`bases/`](bases) | Adapt their referenced paths and schemas to your own private vault. |
 | Optional semantic-search integration | [QMD adapter](.claude/scripts/qmd-mcp.mjs) | Requires a separately configured QMD installation and index. |
 

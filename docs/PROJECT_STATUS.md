@@ -1,6 +1,6 @@
 # Implementation status
 
-Assessment date: 2026-10-07. Source baseline: `d9d147f9bb0fdc8e1d69a8d1490abeb3770cb4bb`.
+Assessment date: 2026-10-08. Source reviewed through `986c911667fe1da70277d0256015cde87ecfa0e5`.
 
 This status separates source inspection from runtime verification. It is not a production-readiness certificate.
 
@@ -11,8 +11,9 @@ This status separates source inspection from runtime verification. It is not a p
 - TypeScript implementations and test sources in [`.claude/scripts/`](../.claude/scripts).
 - Obsidian Base definitions in [`bases/`](../bases).
 - QMD and MCP-related helper source. External search/index setup is still required for those paths.
+- A [GitHub Actions workflow](../.github/workflows/ci.yml) to execute the existing hook tests. Consult the actual run on the relevant commit; the badge is not a claim of clean-machine acceptance.
 
-Presence does not establish that every command works on a clean machine. This documentation pass did not execute Claude Code, Jules, external connectors, or the complete TypeScript test suite.
+Presence does not establish that every command works on a clean machine. This repository review did not execute live Claude Code, Jules, or external connectors.
 
 ## Design intent versus enforcement
 
@@ -32,20 +33,22 @@ Presence does not establish that every command works on a clean machine. This do
 
 1. The adapted `CLAUDE.md` and `vault-manifest.json` refer to deployment-specific paths and additional vault content. The public checkout does not contain all of that material. Do not look in another private repository to fill the gaps automatically.
 2. The runtime package is nested under `.claude/scripts`. Root-level `npm install` in the former README was not the correct package installation step; the quick start now uses the nested package.
-3. The package exposes a typecheck command but does not declare all of its typecheck tooling in devDependencies. Use the explicit development setup in the quick start; reproducible pinned tooling and a lockfile need a separate engineering change.
-4. Some generated state and a `node_modules` tree were already tracked at the baseline. The new root ignore rules prevent future accidental additions where applicable, but do not untrack or erase existing files. Review these in a dedicated cleanup before relying on the export for sensitive use.
-5. Confirmed upstream sources are credited in `THIRD_PARTY_NOTICES.md`. This is not yet a complete source-by-source provenance inventory of every bundled skill and dependency.
+3. The package exposes a typecheck command but does not declare all of its typecheck tooling in devDependencies. Use the explicit development setup in the quick start; reproducible pinned tooling and a committed lockfile need a separate engineering change.
+4. Some generated state and a `node_modules` tree were already tracked in the reviewed source. The root ignore rules prevent future accidental additions where applicable, but do not untrack or erase existing files. Review these in a dedicated cleanup before relying on the export for sensitive use.
+5. Confirmed upstream sources are credited in `THIRD_PARTY_NOTICES.md`. This is not a complete source-by-source provenance inventory of every bundled skill and dependency.
 
-## Validation scope
+## CI setup correction and validation scope
 
-The documentation review checked the live repository tree, README claims, hook registrations, nested package scripts, selected agent implementations, and confirmed upstream license texts. The execution environment could not resolve GitHub for a fresh source checkout, so no fresh complete runtime/test execution is claimed.
+The inherited CI configuration selected Node 20, requested caching through an absent `.claude/scripts/package-lock.json`, and then used `npm ci`. The run for `986c911` failed in setup before executing tests. This PR preserves the existing tests while selecting Node 22.21.0 and using `npm install --ignore-scripts` until a lockfile is deliberately committed. No tests are skipped or weakened. Dependency resolution is not fully locked yet.
+
+The review checked the live repository tree, README claims, hook registrations, nested package scripts, selected agent implementations, and confirmed upstream license texts. The local execution environment could not resolve GitHub for a fresh checkout. Accordingly, any test result must refer to the actual GitHub Actions run rather than a claimed local execution.
 
 A future clean-machine acceptance report should identify the exact commit, Node and runner versions, commands executed, test results, and any external services involved.
 
 ## Near-term priorities
 
 - A portable public vault bootstrap with synthetic starter notes and no dependency on a private portfolio.
-- Repeatable test/typecheck installation, a lockfile, and an automated verification workflow.
+- Repeatable dependency installation, a lockfile, and explicit typecheck tooling.
 - Explicit proposal/accept semantics with tests for paths that can write directly.
 - A tested optional background-job adapter with credentials, scheduling, and cost boundaries documented.
 - Full vendored-source attribution and removal of tracked generated state through a reviewed cleanup.

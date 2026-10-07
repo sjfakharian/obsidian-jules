@@ -62,14 +62,14 @@ after(() => {
 });
 
 describe("parseOpenLoopConfig", () => {
-	test("defaults when manifest is null or lacks the fields", () => {
+	test("defaults when manifest is null or lacks the fields", async () => {
 		const cfg = parseOpenLoopConfig(null);
 		assert.deepEqual(cfg.dirs, ["work/1-1", "work/meetings", "work/incidents"]);
 		assert.equal(cfg.sectionRe.test("## Action Items"), true);
 		assert.equal(cfg.sectionRe.test("### What to Watch"), true);
 		assert.equal(cfg.sectionRe.test("## Notes"), false);
 	});
-	test("manifest overrides both dirs and sections", () => {
+	test("manifest overrides both dirs and sections", async () => {
 		const cfg = parseOpenLoopConfig(
 			JSON.stringify({
 				open_loop_dirs: ["people", "outreach"],
@@ -80,7 +80,7 @@ describe("parseOpenLoopConfig", () => {
 		assert.equal(cfg.sectionRe.test("## Next Steps"), true);
 		assert.equal(cfg.sectionRe.test("## Action Items"), false);
 	});
-	test("rejects traversal-shaped dirs: absolute, dot-dot, backslash, drive-letter", () => {
+	test("rejects traversal-shaped dirs: absolute, dot-dot, backslash, drive-letter", async () => {
 		const cfg = parseOpenLoopConfig(
 			JSON.stringify({
 				open_loop_dirs: ["../outside", "/etc", "C:evil", "ok/dir", "a\\b", "x/../y"],
@@ -93,7 +93,7 @@ describe("parseOpenLoopConfig", () => {
 		assert.deepEqual(allBad.dirs, ["work/1-1", "work/meetings", "work/incidents"]);
 	});
 
-	test("malformed values fall back to defaults (incl. regex metachars escaped)", () => {
+	test("malformed values fall back to defaults (incl. regex metachars escaped)", async () => {
 		const cfg = parseOpenLoopConfig(
 			JSON.stringify({ open_loop_dirs: [], open_loop_sections: [42] }),
 		);
@@ -107,7 +107,7 @@ describe("parseOpenLoopConfig", () => {
 });
 
 describe("countOpenLoops", () => {
-	test("counts unchecked boxes only inside configured sections", () => {
+	test("counts unchecked boxes only inside configured sections", async () => {
 		const note = [
 			"# 1:1",
 			"## Action Items",
@@ -118,19 +118,19 @@ describe("countOpenLoops", () => {
 		].join("\n");
 		assert.equal(countOpenLoops(note, DEFAULTS.sectionRe), 1);
 	});
-	test("counts waiting-on / watch-for phrase lines anywhere", () => {
+	test("counts waiting-on / watch-for phrase lines anywhere", async () => {
 		assert.equal(
 			countOpenLoops("waiting on legal\nWatch for the rollout\n", DEFAULTS.sectionRe),
 			2,
 		);
 	});
-	test("clean note counts zero", () => {
+	test("clean note counts zero", async () => {
 		assert.equal(countOpenLoops("# all wrapped\n", DEFAULTS.sectionRe), 0);
 	});
 });
 
 describe("scanActiveHygiene — detectors", () => {
-	test("flags completed notes in active/ (recursively), ignores active ones", () => {
+	test("flags completed notes in active/ (recursively), ignores active ones", async () => {
 		writeAged(
 			"work/active/Live Project.md",
 			"---\nstatus: active\n---\n# live\n",
@@ -141,13 +141,13 @@ describe("scanActiveHygiene — detectors", () => {
 			"---\nstatus: completed\n---\n# done\n",
 			1,
 		);
-		const report = scanActiveHygiene(ROOT, NOW, DEFAULTS);
+		const report = await scanActiveHygiene(ROOT, NOW, DEFAULTS);
 		assert.deepEqual(report.completedInActive, [
 			"work/active/Grouped Topic/Done Sub.md",
 		]);
 	});
 
-	test("clusters loose root notes sharing a distinctive token; DF guard rejects common words", () => {
+	test("clusters loose root notes sharing a distinctive token; DF guard rejects common words", async () => {
 		for (const f of [
 			"Payments Migration.md",
 			"Payments Rollout.md",
@@ -157,7 +157,7 @@ describe("scanActiveHygiene — detectors", () => {
 		]) {
 			writeAged(`work/active/${f}`, "# x\n", 1);
 		}
-		const report = scanActiveHygiene(ROOT, NOW, DEFAULTS);
+		const report = await scanActiveHygiene(ROOT, NOW, DEFAULTS);
 		const tokens = report.ungroupedClusters.map((c) => c.token);
 		assert.ok(tokens.includes("payments"), `expected payments in ${tokens}`);
 		// Subfoldered notes never cluster; a token in >half the root is rejected.
@@ -166,18 +166,18 @@ describe("scanActiveHygiene — detectors", () => {
 		}
 	});
 
-	test("flags oversized notes vault-wide, exempts Archive names and skip dirs", () => {
+	test("flags oversized notes vault-wide, exempts Archive names and skip dirs", async () => {
 		writeAged("work/Fat Log.md", "x".repeat(MONOLITH_BYTES + 1000), 1);
 		writeAged("work/Fat Log Archive.md", "x".repeat(60_000), 1);
 		writeAged("templates/Huge Template.md", "x".repeat(60_000), 1);
-		const report = scanActiveHygiene(ROOT, NOW, DEFAULTS);
+		const report = await scanActiveHygiene(ROOT, NOW, DEFAULTS);
 		const paths = report.oversizedNotes.map((o) => o.path);
 		assert.ok(paths.includes("work/Fat Log.md"));
 		assert.ok(!paths.some((p) => p.includes("Archive")));
 		assert.ok(!paths.some((p) => p.startsWith("templates/")));
 	});
 
-	test("open loops: quiet notes with live signals flagged; 1:1 dirs reduce to latest per person", () => {
+	test("open loops: quiet notes with live signals flagged; 1:1 dirs reduce to latest per person", async () => {
 		writeAged(
 			"work/1-1/Alice 2026-05-01.md",
 			"## Action Items\n- [ ] old carried item\n",
@@ -190,7 +190,7 @@ describe("scanActiveHygiene — detectors", () => {
 		);
 		writeAged("work/incidents/Payment Outage.md", "watch for regression\n", 30);
 		writeAged("work/meetings/Fresh Sync.md", "waiting on vendor\n", 2);
-		const report = scanActiveHygiene(ROOT, NOW, DEFAULTS);
+		const report = await scanActiveHygiene(ROOT, NOW, DEFAULTS);
 		const paths = report.openLoops.map((l) => l.path);
 		assert.ok(paths.includes("work/1-1/Alice 2026-06-20.md"));
 		assert.ok(!paths.includes("work/1-1/Alice 2026-05-01.md")); // older 1:1 skipped
@@ -201,26 +201,26 @@ describe("scanActiveHygiene — detectors", () => {
 		assert.deepEqual(ages, [...ages].sort((a, b) => b - a));
 	});
 
-	test("overlapping configured dirs do not double-count a file", () => {
+	test("overlapping configured dirs do not double-count a file", async () => {
 		const cfg = parseOpenLoopConfig(
 			JSON.stringify({ open_loop_dirs: ["work", "work/incidents"] }),
 		);
-		const report = scanActiveHygiene(ROOT, NOW, cfg);
+		const report = await scanActiveHygiene(ROOT, NOW, cfg);
 		const hits = report.openLoops.filter(
 			(l) => l.path === "work/incidents/Payment Outage.md",
 		);
 		assert.equal(hits.length, 1);
 	});
 
-	test("meetings-inbox pressure counts week-old raw exports", () => {
+	test("meetings-inbox pressure counts week-old raw exports", async () => {
 		writeAged("work/meetings/2026-06-01 Raw Export.md", "raw dump", 40);
-		const report = scanActiveHygiene(ROOT, NOW, DEFAULTS);
+		const report = await scanActiveHygiene(ROOT, NOW, DEFAULTS);
 		assert.ok(report.inboxPressure !== null);
 		assert.ok(report.inboxPressure!.count >= 1);
 		assert.ok(report.inboxPressure!.oldestDays >= 40);
 	});
 
-	test("the shipped inbox README never counts as pressure (#155)", () => {
+	test("the shipped inbox README never counts as pressure (#155)", async () => {
 		// Isolated root: the shared fixture already holds a real export, and
 		// the point here is what an *untouched* inbox reports.
 		const solo = mkdtempSync(join(tmpdir(), "active-hygiene-scaffold-"));
@@ -234,13 +234,13 @@ describe("scanActiveHygiene — detectors", () => {
 
 			// The bug: an inbox holding nothing but its own scaffold flagged
 			// forever, and /om-intake could never clear it.
-			assert.equal(scanActiveHygiene(solo, NOW, DEFAULTS).inboxPressure, null);
+			assert.equal((await scanActiveHygiene(solo, NOW, DEFAULTS)).inboxPressure, null);
 
 			// …while a genuine export beside it still counts, and counts once.
 			const real = join(solo, "work/meetings/2026-04-01 Standup.md");
 			writeFileSync(real, "raw dump");
 			utimesSync(real, t, t);
-			const withExport = scanActiveHygiene(solo, NOW, DEFAULTS).inboxPressure;
+			const withExport = (await scanActiveHygiene(solo, NOW, DEFAULTS)).inboxPressure;
 			assert.ok(withExport !== null);
 			assert.equal(withExport!.count, 1);
 		} finally {
@@ -248,7 +248,7 @@ describe("scanActiveHygiene — detectors", () => {
 		}
 	});
 
-	test("the cross-repo memory inbox is counted, nested under year and month", () => {
+	test("the cross-repo memory inbox is counted, nested under year and month", async () => {
 		const solo = mkdtempSync(join(tmpdir(), "active-hygiene-memories-"));
 		try {
 			mkdirSync(join(solo, "memories/2026/07"), { recursive: true });
@@ -259,7 +259,7 @@ describe("scanActiveHygiene — detectors", () => {
 
 			// The defect this closes: every other scan here is flat, and the server
 			// writes two levels down, so a flat walk reports an empty inbox forever.
-			const found = scanActiveHygiene(solo, NOW, DEFAULTS).memoryInbox;
+			const found = (await scanActiveHygiene(solo, NOW, DEFAULTS)).memoryInbox;
 			assert.ok(found !== null);
 			assert.equal(found!.count, 1);
 			assert.equal(found!.oldestDays, 3);
@@ -268,38 +268,38 @@ describe("scanActiveHygiene — detectors", () => {
 		}
 	});
 
-	test("a memory capture counts the moment it lands — no age threshold", () => {
+	test("a memory capture counts the moment it lands — no age threshold", async () => {
 		const solo = mkdtempSync(join(tmpdir(), "active-hygiene-memories-fresh-"));
 		try {
 			mkdirSync(join(solo, "memories/2026/07"), { recursive: true });
 			writeFileSync(join(solo, "memories/2026/07/brand new.md"), "captured");
 			// Undrained because nobody has judged it, which is true immediately.
-			assert.equal(scanActiveHygiene(solo, NOW, DEFAULTS).memoryInbox?.count, 1);
+			assert.equal((await scanActiveHygiene(solo, NOW, DEFAULTS)).memoryInbox?.count, 1);
 		} finally {
 			rmSync(solo, { recursive: true, force: true });
 		}
 	});
 
-	test("a shipped README in the memory tree is not a capture", () => {
+	test("a shipped README in the memory tree is not a capture", async () => {
 		const solo = mkdtempSync(join(tmpdir(), "active-hygiene-memories-readme-"));
 		try {
 			mkdirSync(join(solo, "memories/2026/07"), { recursive: true });
 			writeFileSync(join(solo, "memories/2026/07/README.md"), "how this folder works");
 			// Same permanently-unclearable trap the meetings scaffold already fixed.
-			assert.equal(scanActiveHygiene(solo, NOW, DEFAULTS).memoryInbox, null);
+			assert.equal((await scanActiveHygiene(solo, NOW, DEFAULTS)).memoryInbox, null);
 		} finally {
 			rmSync(solo, { recursive: true, force: true });
 		}
 	});
 
-	test("a declared memory_root is honoured, and the default is not hard-coded", () => {
+	test("a declared memory_root is honoured, and the default is not hard-coded", async () => {
 		const solo = mkdtempSync(join(tmpdir(), "active-hygiene-memories-root-"));
 		try {
 			mkdirSync(join(solo, "elsewhere/2026/07"), { recursive: true });
 			writeFileSync(join(solo, "elsewhere/2026/07/a lesson.md"), "captured");
-			assert.equal(scanActiveHygiene(solo, NOW, DEFAULTS).memoryInbox, null);
+			assert.equal((await scanActiveHygiene(solo, NOW, DEFAULTS)).memoryInbox, null);
 			assert.equal(
-				scanActiveHygiene(solo, NOW, DEFAULTS, [], parseMemoryRoot('{"memory_root":"elsewhere"}'))
+				(await scanActiveHygiene(solo, NOW, DEFAULTS, [], parseMemoryRoot('{"memory_root":"elsewhere"}')))
 					.memoryInbox?.count,
 				1,
 			);
@@ -311,19 +311,19 @@ describe("scanActiveHygiene — detectors", () => {
 	// The flag has to be able to reach zero. Promotion is additive, so the entry
 	// stays; without a marker the count could only ever grow, which is the
 	// permanently-unclearable failure #155 already fixed once.
-	test("a promoted capture stops counting, so the flag can clear", () => {
+	test("a promoted capture stops counting, so the flag can clear", async () => {
 		const solo = mkdtempSync(join(tmpdir(), "active-hygiene-memories-promoted-"));
 		try {
 			mkdirSync(join(solo, "memories/2026/07"), { recursive: true });
 			const rel = "memories/2026/07/a lesson.md";
 			writeFileSync(join(solo, rel), "---\nscope: general\n---\n\n# a lesson\n");
-			assert.equal(scanActiveHygiene(solo, NOW, DEFAULTS).memoryInbox?.count, 1);
+			assert.equal((await scanActiveHygiene(solo, NOW, DEFAULTS)).memoryInbox?.count, 1);
 
 			writeFileSync(
 				join(solo, rel),
 				'---\nscope: general\npromoted: "brain/Gotchas"\n---\n\n# a lesson\n',
 			);
-			assert.equal(scanActiveHygiene(solo, NOW, DEFAULTS).memoryInbox, null);
+			assert.equal((await scanActiveHygiene(solo, NOW, DEFAULTS)).memoryInbox, null);
 		} finally {
 			rmSync(solo, { recursive: true, force: true });
 		}
@@ -337,7 +337,7 @@ describe("scanActiveHygiene — detectors", () => {
 	 * the split so the cheaper form is visible — but it must never gate on it, or
 	 * the flag stops being able to reach zero.
 	 */
-	test("a bare marker is counted as named-only, and never revives the flag", () => {
+	test("a bare marker is counted as named-only, and never revives the flag", async () => {
 		const solo = mkdtempSync(join(tmpdir(), "active-hygiene-memories-namedonly-"));
 		try {
 			mkdirSync(join(solo, "memories/2026/07"), { recursive: true });
@@ -352,23 +352,23 @@ describe("scanActiveHygiene — detectors", () => {
 
 			// Both are promoted, so there is no pressure at all — the flag reaches
 			// zero exactly as before, which is the invariant #155 established.
-			assert.equal(scanActiveHygiene(solo, NOW, DEFAULTS).memoryInbox, null);
+			assert.equal((await scanActiveHygiene(solo, NOW, DEFAULTS)).memoryInbox, null);
 
 			// Add one UNpromoted capture: the flag fires, and the split rides on it
 			// as a detail rather than as a second warning of its own.
 			writeFileSync(join(solo, "memories/2026/07/fresh.md"), "---\nscope: general\n---\n\n# fresh\n");
-			const inbox = scanActiveHygiene(solo, NOW, DEFAULTS).memoryInbox;
+			const inbox = (await scanActiveHygiene(solo, NOW, DEFAULTS)).memoryInbox;
 			assert.equal(inbox?.count, 1, "only the unpromoted capture is pressure");
 			assert.equal(inbox?.namedOnly, 1, "the bare marker counts, the anchored one does not");
 
-			const text = formatActiveHygiene(scanActiveHygiene(solo, NOW, DEFAULTS)).join("\n");
+			const text = formatActiveHygiene(await scanActiveHygiene(solo, NOW, DEFAULTS)).join("\n");
 			assert.match(text, /1 already-promoted capture\(s\) here carry a bare marker/);
 		} finally {
 			rmSync(solo, { recursive: true, force: true });
 		}
 	});
 
-	test("quoting does not change the verdict — the writer stamps a YAML scalar", () => {
+	test("quoting does not change the verdict — the writer stamps a YAML scalar", async () => {
 		// The capture writer emits `promoted: 'brain/X#^id'`, and hand-promotion
 		// writes all three forms below. The count must not depend on which.
 		//
@@ -388,7 +388,7 @@ describe("scanActiveHygiene — detectors", () => {
 					`---\nscope: general\npromoted: ${marker}\n---\n\n# q\n`,
 				);
 				assert.equal(
-					scanActiveHygiene(solo, NOW, DEFAULTS).memoryInbox?.namedOnly,
+					(await scanActiveHygiene(solo, NOW, DEFAULTS)).memoryInbox?.namedOnly,
 					0,
 					`anchored, however quoted: ${marker}`,
 				);
@@ -398,23 +398,23 @@ describe("scanActiveHygiene — detectors", () => {
 		}
 	});
 
-	test("an empty or misplaced promoted marker does not silence a capture", () => {
+	test("an empty or misplaced promoted marker does not silence a capture", async () => {
 		const solo = mkdtempSync(join(tmpdir(), "active-hygiene-memories-badmark-"));
 		try {
 			mkdirSync(join(solo, "memories/2026/07"), { recursive: true });
 			// A bare key with no value is not a promotion record and must not hide
 			// a capture from review.
 			writeFileSync(join(solo, "memories/2026/07/x.md"), "---\npromoted:\n---\n\n# x\n");
-			assert.equal(scanActiveHygiene(solo, NOW, DEFAULTS).memoryInbox?.count, 1);
+			assert.equal((await scanActiveHygiene(solo, NOW, DEFAULTS)).memoryInbox?.count, 1);
 			// Nor may the word appearing in the BODY rather than the frontmatter.
 			writeFileSync(join(solo, "memories/2026/07/y.md"), "# y\n\npromoted: brain/Thing\n");
-			assert.equal(scanActiveHygiene(solo, NOW, DEFAULTS).memoryInbox?.count, 2);
+			assert.equal((await scanActiveHygiene(solo, NOW, DEFAULTS)).memoryInbox?.count, 2);
 		} finally {
 			rmSync(solo, { recursive: true, force: true });
 		}
 	});
 
-	test("the memory-inbox line says COPY, never delete", () => {
+	test("the memory-inbox line says COPY, never delete", async () => {
 		const lines = formatActiveHygiene({
 			completedInActive: [],
 			ungroupedClusters: [],
@@ -433,10 +433,10 @@ describe("scanActiveHygiene — detectors", () => {
 		assert.doesNotMatch(text, /om-intake/);
 	});
 
-	test("missing folders produce an empty report, not errors", () => {
+	test("missing folders produce an empty report, not errors", async () => {
 		const empty = mkdtempSync(join(tmpdir(), "active-hygiene-empty-"));
 		try {
-			const report = scanActiveHygiene(empty, NOW, DEFAULTS);
+			const report = await scanActiveHygiene(empty, NOW, DEFAULTS);
 			assert.deepEqual(report.completedInActive, []);
 			assert.deepEqual(report.ungroupedClusters, []);
 			assert.deepEqual(report.oversizedNotes, []);
@@ -450,7 +450,7 @@ describe("scanActiveHygiene — detectors", () => {
 });
 
 describe("write-time detectors", () => {
-	test("newNoteClusterCandidate fires for a loose root note in a cluster, not for subfoldered or outside paths", () => {
+	test("newNoteClusterCandidate fires for a loose root note in a cluster, not for subfoldered or outside paths", async () => {
 		const hit = newNoteClusterCandidate(
 			join(ROOT, "work/active/Payments Migration.md"),
 			ROOT,
@@ -469,7 +469,7 @@ describe("write-time detectors", () => {
 		);
 	});
 
-	test("hints carry the judgment framing", () => {
+	test("hints carry the judgment framing", async () => {
 		const hint = formatClusterHint({
 			token: "payments",
 			files: ["Payments A.md", "Payments B.md"],
@@ -481,14 +481,14 @@ describe("write-time detectors", () => {
 		assert.match(mono, /42KB/);
 	});
 
-	test("isMonolithExempt covers Archive names only", () => {
+	test("isMonolithExempt covers Archive names only", async () => {
 		assert.equal(isMonolithExempt("Delivery Log Archive.md"), true);
 		assert.equal(isMonolithExempt("Delivery Log.md"), false);
 	});
 });
 
 describe("walkMarkdown", () => {
-	test("recurses into subfolders and tolerates missing dirs", () => {
+	test("recurses into subfolders and tolerates missing dirs", async () => {
 		const files = walkMarkdown(ROOT, "work/active");
 		assert.ok(files.includes("work/active/Grouped Topic/Done Sub.md"));
 		assert.deepEqual(walkMarkdown(ROOT, "no/such/dir"), []);
@@ -496,7 +496,7 @@ describe("walkMarkdown", () => {
 });
 
 describe("formatActiveHygiene", () => {
-	test("renders one block per drift mode, silent segments omitted", () => {
+	test("renders one block per drift mode, silent segments omitted", async () => {
 		const lines = formatActiveHygiene({
 			completedInActive: ["work/active/Done.md"],
 			ungroupedClusters: [],

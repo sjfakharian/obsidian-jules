@@ -83,7 +83,7 @@ try {
 	/* missing manifest → default open-loop config */
 }
 const hygieneLines = formatActiveHygiene(
-	scanActiveHygiene(
+	await scanActiveHygiene(
 		vaultRoot,
 		Date.now(),
 		parseOpenLoopConfig(manifestJson),

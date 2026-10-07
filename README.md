@@ -4,6 +4,7 @@
 **An asynchronous, CI/CD-inspired Executive OS for your Obsidian knowledge base**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![CI](https://github.com/sjfakharian/obsidian-jules/actions/workflows/ci.yml/badge.svg)](https://github.com/sjfakharian/obsidian-jules/actions/workflows/ci.yml)
 [![Obsidian Compatible](https://img.shields.io/badge/Obsidian-Compatible-blueviolet.svg)](https://obsidian.md)
 [![Subagents](https://img.shields.io/badge/subagents-13-green.svg)]()
 [![Hygiene Hooks](https://img.shields.io/badge/hooks-5-orange.svg)]()

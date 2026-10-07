@@ -144,17 +144,16 @@ if (shouldSkipFile(filePath)) {
 	process.exit(0);
 }
 
-// Single read: prose warnings AND policy results derive from the same
-// content snapshot — no second read, no TOCTOU window between them.
-let content: string;
+// Fast-path size check: gracefully skip frontmatter validation for massive files
+// (e.g. 50MB log drops) to avoid string memory limits and regex-engine death.
+// The file is still processed by the organization checks (monolith check) below.
+let size = 0;
 try {
-	content = readFileSync(filePath, { encoding: "utf-8" });
+	size = statSync(filePath).size;
 } catch {
-	debug(`validate: could not read ${filePath}`);
+	debug(`validate: could not stat ${filePath}`);
 	process.exit(0);
 }
-const warnings = validateContent(content);
-debug(`validate: ${filePath} — ${warnings.length} warning(s)`);
 
 const blocks: string[] = [];
 const policyResults: PolicyResult[] = [];
@@ -162,22 +161,39 @@ const relPath = filePathFwd.startsWith(vaultRoot + "/")
 	? filePathFwd.slice(vaultRoot.length + 1)
 	: filePathFwd;
 
-if (warnings.length > 0) {
-	const hintList = warnings.map((w) => `  - ${w}`).join("\n");
-	const base = basename(filePath.replaceAll("\\", "/"));
-	blocks.push(
-		`Vault hygiene warnings for \`${base}\`:\n${hintList}\nFix these before moving on.`,
-	);
-	// Phantom-edge findings ride the #117 contract like every other
-	// detector — counted from the SAME content snapshot the prose came from.
-	if (countTicketIdWikilinks(content) > 0) {
-		policyResults.push({
-			policy_id: "phantom-edge",
-			path: relPath,
-			classification: "ticket-id-wikilink",
-			action: "warn",
-		});
+// 5MB threshold avoids memory/CPU spikes for regex runs.
+if (size < 5 * 1024 * 1024) {
+	// Single read: prose warnings AND policy results derive from the same
+	// content snapshot — no second read, no TOCTOU window between them.
+	let content: string;
+	try {
+		content = readFileSync(filePath, { encoding: "utf-8" });
+	} catch {
+		debug(`validate: could not read ${filePath}`);
+		process.exit(0);
 	}
+	const warnings = validateContent(content);
+	debug(`validate: ${filePath} — ${warnings.length} warning(s)`);
+
+	if (warnings.length > 0) {
+		const hintList = warnings.map((w) => `  - ${w}`).join("\n");
+		const base = basename(filePath.replaceAll("\\", "/"));
+		blocks.push(
+			`Vault hygiene warnings for \`${base}\`:\n${hintList}\nFix these before moving on.`,
+		);
+		// Phantom-edge findings ride the #117 contract like every other
+		// detector — counted from the SAME content snapshot the prose came from.
+		if (countTicketIdWikilinks(content) > 0) {
+			policyResults.push({
+				policy_id: "phantom-edge",
+				path: relPath,
+				classification: "ticket-id-wikilink",
+				action: "warn",
+			});
+		}
+	}
+} else {
+	debug(`validate: ${filePath} is ${size} bytes — skipping frontmatter validation`);
 }
 
 // Write-time organization flags (#103): the same detectors the scan hooks
@@ -185,23 +201,19 @@ if (warnings.length > 0) {
 // oversized (or added the note that completes a cluster) has the context
 // to organize it NOW. Each detector is isolated so a future unguarded
 // edit inside one can't kill the sibling checks in the same write.
-try {
-	const size = statSync(filePath).size;
-	if (
-		size >= MONOLITH_BYTES &&
-		!isMonolithExempt(basename(filePathFwd))
-	) {
-		blocks.push(formatMonolithHint(relPath, size));
-		policyResults.push({
-			policy_id: "organization-threshold",
-			path: relPath,
-			classification: "oversized-note",
-			action: "flag",
-		});
-	}
-} catch {
-	debug("validate: monolith check failed — skipped");
+if (
+	size >= MONOLITH_BYTES &&
+	!isMonolithExempt(basename(filePathFwd))
+) {
+	blocks.push(formatMonolithHint(relPath, size));
+	policyResults.push({
+		policy_id: "organization-threshold",
+		path: relPath,
+		classification: "oversized-note",
+		action: "flag",
+	});
 }
+
 try {
 	const cluster = newNoteClusterCandidate(filePath, vaultRoot);
 	if (cluster !== null) {

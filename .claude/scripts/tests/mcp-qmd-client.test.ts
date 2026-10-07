@@ -21,6 +21,7 @@ import {
 	scopeResults,
 	subQueries,
 	createQmdClient,
+	qmdSearch,
 	type QmdHit,
 } from "../lib/mcp-qmd-client.ts";
 
@@ -280,5 +281,63 @@ describe("rendering", () => {
 	test("a line number is included when present and omitted when not", () => {
 		assert.match(scopeResults([hit("myvault/brain/Gotchas.md", { line: 42 })], ALLOWED).text, /Gotchas\.md:42/);
 		assert.ok(!scopeResults([hit("myvault/brain/Gotchas.md")], ALLOWED).text.includes(".md:"));
+	});
+});
+
+// ---------------------------------------------------------------------------
+// qmdSearch delegation and error handling
+// ---------------------------------------------------------------------------
+
+describe("qmdSearch", () => {
+	test("a successful search delegates to the client and scopes results", async () => {
+		const client: any = {
+			ready: Promise.resolve(),
+			alive: true,
+			dispose: () => {},
+			call: async (method: string, params: any) => {
+				assert.equal(method, "tools/call");
+				assert.equal(params.name, "query");
+				assert.ok(params.arguments.searches.some((s: any) => s.type === "lex"));
+				assert.equal(params.arguments.intent, "how do we cache");
+				return {
+					structuredContent: {
+						results: [
+							hit("myvault/brain/Gotchas.md"),
+							hit("myvault/outside/Secret.md")
+						]
+					}
+				};
+			}
+		};
+
+		const res = await qmdSearch(client, ALLOWED, "how do we cache");
+		assert.match(res.text, /Gotchas/);
+		assert.ok(!res.text.includes("Secret"));
+		assert.equal(res.withheld, 1);
+		assert.equal(res.total, 2);
+	});
+
+	test("a rejected ready promise is handled gracefully", async () => {
+		const client: any = {
+			ready: Promise.reject(new Error("qmd failed to start")),
+			alive: false,
+			dispose: () => {},
+			call: async () => { throw new Error("should not be called"); }
+		};
+		const res = await qmdSearch(client, ALLOWED, "test query");
+		assert.match(res.text, /search failed/i);
+		assert.match(res.text, /qmd failed to start/i);
+	});
+
+	test("a call failure is caught and handled", async () => {
+		const client: any = {
+			ready: Promise.resolve(),
+			alive: true,
+			dispose: () => {},
+			call: async () => { throw new Error("qmd timeout"); }
+		};
+		const res = await qmdSearch(client, ALLOWED, "test query");
+		assert.match(res.text, /search failed/i);
+		assert.match(res.text, /qmd timeout/i);
 	});
 });

@@ -5,5 +5,8 @@
   "scripts": {
     "test": "node --experimental-strip-types --test",
     "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "fast-check": "^4.10.2"
   }
 }

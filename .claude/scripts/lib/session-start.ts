@@ -707,7 +707,7 @@ export function isInfraFilename(
  *   - [ ] daily task
  */
 export function collectOpenTasks(
-	sources: readonly { readonly path: string; readonly content: string }[],
+	sources: Iterable<{ readonly path: string; readonly content: string }>,
 	limit: number,
 ): string {
 	const groups: string[] = [];

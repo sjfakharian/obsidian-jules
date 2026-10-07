@@ -17,9 +17,11 @@ import { join, dirname } from "node:path";
 import {
 	resolvableNames,
 	loadMemoryDigests,
+	digestsFrom,
 	findNoteNamed,
 	callerPlatforms,
 	semanticMemoryOrder,
+	unquoteScalar,
 } from "../lib/mcp-memory-bridge.ts";
 import type { VisibleFile } from "../lib/mcp-exposure.ts";
 import type { QmdClient } from "../lib/mcp-qmd-client.ts";
@@ -55,6 +57,57 @@ function fakeQmd(files: string[] | null, fail = false): QmdClient {
 		},
 	};
 }
+
+// ---------------------------------------------------------------------------
+// String parsing
+// ---------------------------------------------------------------------------
+
+describe("unquoteScalar", () => {
+	test("returns an unquoted string as-is (with trimming)", () => {
+		assert.equal(unquoteScalar("hello"), "hello");
+		assert.equal(unquoteScalar("  world  "), "world");
+		assert.equal(unquoteScalar("123"), "123");
+	});
+
+	test("unquotes single-quoted strings", () => {
+		assert.equal(unquoteScalar("'hello'"), "hello");
+		assert.equal(unquoteScalar("  'world'  "), "world");
+	});
+
+	test("unescapes double single-quotes in single-quoted strings", () => {
+		assert.equal(unquoteScalar("'it''s fine'"), "it's fine");
+		assert.equal(unquoteScalar("''''"), "'"); // two pairs inside outer quotes
+	});
+
+	test("unquotes double-quoted strings", () => {
+		assert.equal(unquoteScalar('"hello"'), "hello");
+		assert.equal(unquoteScalar('  "world"  '), "world");
+	});
+
+	test("unescapes backslashes in double-quoted strings", () => {
+		assert.equal(unquoteScalar('"he\\"llo"'), 'he"llo');
+		assert.equal(unquoteScalar('"path\\\\to"'), 'path\\to');
+		assert.equal(unquoteScalar('"\\\\\\""'), '\\"');
+	});
+
+	test("returns partial quotes as-is", () => {
+		assert.equal(unquoteScalar("'hello"), "'hello");
+		assert.equal(unquoteScalar('world"'), 'world"');
+	});
+
+	test("handles empty strings and empty quotes", () => {
+		assert.equal(unquoteScalar(""), "");
+		assert.equal(unquoteScalar("''"), "");
+		assert.equal(unquoteScalar('""'), "");
+	});
+
+	test("ignores unmatched outer quotes when unescaping", () => {
+		// A backslash before a double quote inside single quotes should stay literal.
+		assert.equal(unquoteScalar("'he\\\"llo'"), "he\\\"llo");
+		// Two single quotes inside double quotes should stay literal.
+		assert.equal(unquoteScalar('"it\'\'s"'), "it''s");
+	});
+});
 
 // ---------------------------------------------------------------------------
 // Link resolution
@@ -107,6 +160,75 @@ describe("names a wikilink may resolve to", () => {
 // ---------------------------------------------------------------------------
 // Digests
 // ---------------------------------------------------------------------------
+
+describe("digesting memories from memory entries", () => {
+	const mockFacets = (source: string | null) => ({
+		source,
+		scope: "general",
+		projects: [],
+		platforms: [],
+		confidence: "verified",
+		flags: [],
+		origin: null,
+		date: null,
+		session: null,
+		superseded_by: [],
+	});
+
+	test("maps title, body and facets correctly", () => {
+		const entries = [
+			{
+				rel: "memories/a.md",
+				full: "C:/v/memories/a.md",
+				title: "tokens expire fast",
+				body: "the body.",
+				facets: mockFacets("mcp-capture"),
+			},
+		];
+		const [d] = digestsFrom(entries);
+		assert.equal(d!.title, "tokens expire fast");
+		assert.equal(d!.body, "the body.");
+		assert.equal(d!.rel, "memories/a.md");
+		assert.equal(d!.full, "C:/v/memories/a.md");
+		assert.equal(d!.confidence, "verified");
+	});
+
+	test("falls back to empty string for null title", () => {
+		const entries = [
+			{
+				rel: "memories/a.md",
+				full: "C:/v/memories/a.md",
+				title: null,
+				body: "the body.",
+				facets: mockFacets("mcp-capture"),
+			},
+		];
+		const [d] = digestsFrom(entries);
+		assert.equal(d!.title, "");
+	});
+
+	test("filters out non-agent memories", () => {
+		const entries = [
+			{
+				rel: "memories/human.md",
+				full: "C:/v/memories/human.md",
+				title: "human note",
+				body: "mine",
+				facets: mockFacets(null), // Not an agent source
+			},
+			{
+				rel: "memories/agent.md",
+				full: "C:/v/memories/agent.md",
+				title: "agent note",
+				body: "yours",
+				facets: mockFacets("mcp-capture"),
+			},
+		];
+		const digests = digestsFrom(entries);
+		assert.equal(digests.length, 1);
+		assert.equal(digests[0]!.title, "agent note");
+	});
+});
 
 describe("loading memory digests", () => {
 	test("reads title, body and facets", () => {

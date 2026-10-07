@@ -105,23 +105,95 @@ obsidian-jules/
 
 ---
 
-## 🚀 Quick Start
+## ⚙️ Prerequisites
 
-1. **Clone the OS**
+Before you start, ensure you have:
+1. **[Obsidian](https://obsidian.md)** (Free) — The visual UI for your Markdown knowledge graph.
+2. **[Node.js 20+](https://nodejs.org)** — Executes the TypeScript lifecycle hooks and automated test suite.
+3. **An Agent Runner** — Choose **Option A (Local Co-Pilot)**, **Option B (Cloud Jules Agent)**, or the **Hybrid Setup** below.
+
+---
+
+## 🚀 Quick Start: Choose Your Agent Engine
+
+You can run **Obsidian-Jules** in the mode that fits your workflow:
+
+```
+                      ┌───────────────────────────────────────┐
+                      │          Obsidian-Jules Vault         │
+                      └──────────────────┬────────────────────┘
+                                         │
+                 ┌───────────────────────┴───────────────────────┐
+                 ▼                                               ▼
+       [ Option A: Local Mode ]                       [ Option B: Cloud Mode ]
+          Local AI Co-Pilot                             Autonomous Cloud Agent
+        (Claude Code / Local CLI)                           (Google Jules)
+                 │                                               │
+  • Real-time edit validation                     • "Fire and Forget" background tasks
+  • Intercepts broken links as you type           • Overnight vault refactoring & audits
+  • Instant chat with notes in terminal           • Auto-generates Knowledge PRs on GitHub
+```
+
+### 1. Clone the Vault
+```bash
+git clone https://github.com/sjfakharian/obsidian-jules.git my-second-brain
+cd my-second-brain
+npm install
+```
+Open the `my-second-brain` folder as an existing vault in [Obsidian](https://obsidian.md).
+
+---
+
+### 2. Choose Your Execution Path
+
+#### 🟢 Option A: Local Co-Pilot (Claude Code / Local CLI)
+*Best for: Interactive note-taking, real-time link validation, and terminal chatting while in Obsidian.*
+
+1. Install [Claude Code](https://claude.ai/code):
    ```bash
-   git clone https://github.com/yourusername/obsidian-jules.git my-second-brain
-   cd my-second-brain
+   npm install -g @anthropic-ai/claude-code
+   ```
+2. Set your Anthropic API Key:
+   ```bash
+   export ANTHROPIC_API_KEY="your-api-key"
+   ```
+3. Start the OS in your vault directory:
+   ```bash
+   claude
+   ```
+   *The lifecycle hooks in `.claude/` will automatically run: validating note sizes, checking wikilinks, and guiding note creation.*
+
+---
+
+#### 🔵 Option B: Cloud Autonomous Agent (Google Jules)
+*Best for: Asynchronous "fire-and-forget" workflows, background audits, and GitHub Knowledge PRs.*
+
+1. Push your vault to a private (or public) GitHub repository.
+2. Install the [Jules CLI](https://jules.google.com):
+   ```bash
+   # Follow instructions at https://jules.google.com
+   export JULES_API_KEY="your-jules-api-key"
+   # Or authenticate via:
+   jules login
+   ```
+3. Dispatch background tasks from your terminal:
+   ```bash
+   # Audit vault hygiene and submit a Knowledge PR:
+   jules new "Audit vault hygiene, fix broken wikilinks, and create a Knowledge PR"
+
+   # Extract accomplishments from raw meeting notes:
+   jules new "Process work/meetings/ notes from this week and draft updates to perf/brag/"
+   ```
+4. Review and merge the Knowledge PR in GitHub or pull directly via the Jules CLI:
+   ```bash
+   jules remote list --session
+   jules remote pull --session <SESSION_ID> --apply
    ```
 
-2. **Initialize the Agents**
-   *(Make sure you have Node.js and an AI CLI like Claude Code or Gemini installed)*
-   ```bash
-   # The lifecycle hooks will automatically install dependencies on first run
-   npm install
-   ```
+---
 
-3. **Open in Obsidian**
-   Open the `my-second-brain` folder as a new vault in [Obsidian](https://obsidian.md).
+#### ⚡ Option C: The Hybrid Setup (Recommended)
+Use **Option A (Claude Code)** during the day while you take notes in Obsidian (preventing broken links and enforcing structure), and let **Option B (Google Jules)** run background maintenance, incident post-mortems, and Knowledge PRs while you sleep.
 
 ---
 

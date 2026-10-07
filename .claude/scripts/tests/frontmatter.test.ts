@@ -9,7 +9,14 @@ import {
 	isBlockedMemoryPath,
 	shouldSkipFile,
 	validateContent,
+	validateFile,
 } from "../lib/frontmatter.ts";
+
+describe("validateFile", () => {
+	test("returns null when file reading fails", () => {
+		assert.equal(validateFile("/this-file-does-not-exist.md"), null);
+	});
+});
 
 describe("shouldSkipFile — skip rules", () => {
 	test("skips non-markdown", () => {

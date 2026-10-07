@@ -602,7 +602,7 @@ if (qmdVersionNote !== null) {
 // Hygiene drift flags (#98/#103/#106): silent when the vault is clean, so
 // the section only spends tokens when it has something to say.
 const hygieneLines = formatActiveHygiene(
-	scanActiveHygiene(
+	await scanActiveHygiene(
 		cwd,
 		Date.now(),
 		parseOpenLoopConfig(manifestJson),

@@ -260,7 +260,7 @@ function fixMisplacedMemory(
 	}
 }
 
-function main(): void {
+async function main(): Promise<void> {
 	const apply = process.argv.includes("--apply");
 	const vaultRoot = (process.env["CLAUDE_PROJECT_DIR"] || process.cwd())
 		.replaceAll("\\", "/")
@@ -272,7 +272,7 @@ function main(): void {
 	} catch {
 		/* defaults */
 	}
-	const scan = scanActiveHygiene(
+	const scan = await scanActiveHygiene(
 		vaultRoot,
 		Date.now(),
 		parseOpenLoopConfig(manifestJson),
@@ -325,4 +325,4 @@ function main(): void {
 	}
 }
 
-if (isMainModule(import.meta.url)) main();
+if (isMainModule(import.meta.url)) main().catch(console.error);

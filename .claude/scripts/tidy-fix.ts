@@ -37,10 +37,13 @@
 
 import { spawnSync } from "node:child_process";
 import {
+	closeSync,
 	existsSync,
 	mkdirSync,
+	openSync,
 	readdirSync,
 	readFileSync,
+	readSync,
 	renameSync,
 	rmSync,
 	writeFileSync,
@@ -104,15 +107,25 @@ function moveTracked(
 }
 
 function archiveYear(vaultRoot: string, rel: string): string {
+	let fd: number | null = null;
 	try {
-		const date = extractFrontmatterField(
-			readFileSync(join(vaultRoot, rel), "utf-8"),
-			"date",
-		);
+		fd = openSync(join(vaultRoot, rel), "r");
+		const buffer = Buffer.alloc(2048);
+		const bytesRead = readSync(fd, buffer, 0, 2048, 0);
+		const content = buffer.toString("utf-8", 0, bytesRead);
+		const date = extractFrontmatterField(content, "date");
 		const m = date?.match(/^(\d{4})/);
 		if (m) return m[1] as string;
 	} catch {
 		/* fall through */
+	} finally {
+		if (fd !== null) {
+			try {
+				closeSync(fd);
+			} catch {
+				/* ignore */
+			}
+		}
 	}
 	return String(new Date().getFullYear());
 }

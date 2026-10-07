@@ -3,10 +3,16 @@ benchmark_root/
 
 # Development dependencies and machine-specific files
 node_modules/
+!.claude/scripts/node_modules/
 .DS_Store
 Thumbs.db
 coverage/
 *.tsbuildinfo
+*.swp
+*.lock
+
+# Personal Obsidian settings
+.obsidian/
 
 # Local credentials: keep the documented example available
 .env
@@ -22,6 +28,7 @@ token.json
 # Agent-local state and generated transcripts
 .claude/settings.local.json
 .claude/om-mcp-audit.jsonl
+.claude/om-reasoning/
 .claude/scripts/.hint-state.json
 .claude/scripts/.qmd-refresh-sentinel
 thinking/session-logs/

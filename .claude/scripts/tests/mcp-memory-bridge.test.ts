@@ -17,6 +17,7 @@ import { join, dirname } from "node:path";
 import {
 	resolvableNames,
 	loadMemoryDigests,
+	digestsFrom,
 	findNoteNamed,
 	callerPlatforms,
 	semanticMemoryOrder,
@@ -159,6 +160,75 @@ describe("names a wikilink may resolve to", () => {
 // ---------------------------------------------------------------------------
 // Digests
 // ---------------------------------------------------------------------------
+
+describe("digesting memories from memory entries", () => {
+	const mockFacets = (source: string | null) => ({
+		source,
+		scope: "general",
+		projects: [],
+		platforms: [],
+		confidence: "verified",
+		flags: [],
+		origin: null,
+		date: null,
+		session: null,
+		superseded_by: [],
+	});
+
+	test("maps title, body and facets correctly", () => {
+		const entries = [
+			{
+				rel: "memories/a.md",
+				full: "C:/v/memories/a.md",
+				title: "tokens expire fast",
+				body: "the body.",
+				facets: mockFacets("mcp-capture"),
+			},
+		];
+		const [d] = digestsFrom(entries);
+		assert.equal(d!.title, "tokens expire fast");
+		assert.equal(d!.body, "the body.");
+		assert.equal(d!.rel, "memories/a.md");
+		assert.equal(d!.full, "C:/v/memories/a.md");
+		assert.equal(d!.confidence, "verified");
+	});
+
+	test("falls back to empty string for null title", () => {
+		const entries = [
+			{
+				rel: "memories/a.md",
+				full: "C:/v/memories/a.md",
+				title: null,
+				body: "the body.",
+				facets: mockFacets("mcp-capture"),
+			},
+		];
+		const [d] = digestsFrom(entries);
+		assert.equal(d!.title, "");
+	});
+
+	test("filters out non-agent memories", () => {
+		const entries = [
+			{
+				rel: "memories/human.md",
+				full: "C:/v/memories/human.md",
+				title: "human note",
+				body: "mine",
+				facets: mockFacets(null), // Not an agent source
+			},
+			{
+				rel: "memories/agent.md",
+				full: "C:/v/memories/agent.md",
+				title: "agent note",
+				body: "yours",
+				facets: mockFacets("mcp-capture"),
+			},
+		];
+		const digests = digestsFrom(entries);
+		assert.equal(digests.length, 1);
+		assert.equal(digests[0]!.title, "agent note");
+	});
+});
 
 describe("loading memory digests", () => {
 	test("reads title, body and facets", () => {

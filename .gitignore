@@ -1,1 +1,9 @@
-benchmark_root/
+node_modules/
+!.claude/scripts/node_modules/
+.env
+.DS_Store
+*.swp
+.obsidian/
+*.lock
+.claude/om-mcp-audit.jsonl
+.claude/om-reasoning/

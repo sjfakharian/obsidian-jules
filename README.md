@@ -1,7 +1,7 @@
 <div align="center">
 
 # 🧠 Obsidian-Jules
-**The First Asynchronous, CI/CD-Driven Executive OS for Your Mind**
+**An asynchronous, CI/CD-inspired Executive OS for your Obsidian knowledge base**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Obsidian Compatible](https://img.shields.io/badge/Obsidian-Compatible-blueviolet.svg)](https://obsidian.md)
@@ -9,11 +9,22 @@
 [![Hygiene Hooks](https://img.shields.io/badge/hooks-5-orange.svg)]()
 [![PRs](https://img.shields.io/badge/Knowledge_PRs-Enabled-success.svg)]()
 
-*Most AI note-taking tools just "read" your text. **Obsidian-Jules** maintains your system, challenges your assumptions, and manages your career in the background while you sleep.*
+*Most AI note-taking tools just "read" your text. **Obsidian-Jules** explores a different model: reviewable agents that maintain, challenge, and improve a long-lived knowledge system.*
 
 [Get Started](#-quick-start) • [How it Works](#-the-asynchronous-paradigm) • [Meet the Agents](#-meet-your-autonomous-team) • [Roadmap](#-future-architecture)
 
 </div>
+
+
+---
+
+## 🚧 Project Status
+
+Obsidian-Jules is an **early-stage open-source project** and is evolving quickly. The repository is usable today as a reference implementation and starter vault, but some automation paths and integrations remain experimental.
+
+The local execution path is built around **Claude Code** plus repository-level instructions, specialized agents, and lifecycle hooks. A separate cloud path can use **Google Jules** for asynchronous background tasks and GitHub-based Knowledge PRs.
+
+The project is intentionally review-first: AI-generated changes should be inspectable before they become durable knowledge.
 
 ---
 
@@ -194,6 +205,15 @@ Open the `my-second-brain` folder as an existing vault in [Obsidian](https://obs
 
 #### ⚡ Option C: The Hybrid Setup (Recommended)
 Use **Option A (Claude Code)** during the day while you take notes in Obsidian (preventing broken links and enforcing structure), and let **Option B (Google Jules)** run background maintenance, incident post-mortems, and Knowledge PRs while you sleep.
+
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome, especially around agent safety, hook reliability, knowledge-graph hygiene, testing, and reproducible workflows.
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Bug reports and focused feature proposals are welcome through GitHub Issues.
 
 ---
 

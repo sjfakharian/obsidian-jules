@@ -12,7 +12,7 @@
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
-import { join, dirname, basename } from 'node:path';
+import { join, basename } from 'node:path';
 
 function parseArgs() {
     const args = process.argv.slice(2);
@@ -32,7 +32,8 @@ function parseArgs() {
 }
 
 function backupFile(filePath: string): string {
-    const backupDir = join('.claude', 'backups');
+    const root = process.env["CLAUDE_PROJECT_DIR"] ?? ".";
+    const backupDir = join(root, '.claude', 'backups');
     if (!existsSync(backupDir)) {
         mkdirSync(backupDir, { recursive: true });
     }

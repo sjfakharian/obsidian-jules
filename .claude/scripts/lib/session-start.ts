@@ -659,6 +659,8 @@ export function parseInfraRootFilenames(
 	);
 }
 
+const _infraPatternCache = new Map<string, RegExp>();
+
 /**
  * True if `filename` matches any of the given root-level infrastructure
  * patterns. Patterns are literal filenames (`CLAUDE.md`) or globs with `*`
@@ -674,11 +676,15 @@ export function isInfraFilename(
 			if (filename === p) return true;
 			continue;
 		}
-		const re = new RegExp(
-			"^" +
-				p.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*") +
-				"$",
-		);
+		let re = _infraPatternCache.get(p);
+		if (!re) {
+			re = new RegExp(
+				"^" +
+					p.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*") +
+					"$",
+			);
+			_infraPatternCache.set(p, re);
+		}
 		if (re.test(filename)) return true;
 	}
 	return false;

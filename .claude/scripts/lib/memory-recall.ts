@@ -371,14 +371,16 @@ export function listMemoryFiles(vaultRoot: string, root: string = MEMORY_ROOT): 
 	for (const year of safeDirs(base)) {
 		for (const month of safeDirs(join(base, year))) {
 			const dir = join(base, year, month);
-			let names: string[];
+			let entries;
 			try {
-				names = readdirSync(dir);
+				entries = readdirSync(dir, { withFileTypes: true });
 			} catch {
 				continue;
 			}
-			for (const name of names) {
-				if (name.endsWith(".md")) out.push({ rel: `${root}/${year}/${month}/${name}`, full: join(dir, name) });
+			for (const e of entries) {
+				if (e.isFile() && e.name.endsWith(".md")) {
+					out.push({ rel: `${root}/${year}/${month}/${e.name}`, full: join(dir, e.name) });
+				}
 			}
 		}
 	}

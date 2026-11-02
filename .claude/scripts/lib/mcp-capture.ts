@@ -144,9 +144,9 @@ export function projectDirFor(vaultRoot: string, caller: string | null): { name:
 	const root = join(vaultRoot, "projects");
 	if (!existsSync(root)) return null;
 
-	let entries: string[];
+	let entries;
 	try {
-		entries = readdirSync(root);
+		entries = readdirSync(root, { withFileTypes: true });
 	} catch {
 		return null;
 	}
@@ -158,13 +158,14 @@ export function projectDirFor(vaultRoot: string, caller: string | null): { name:
 	// any Base that filters on it.
 	const want = caller.toLowerCase();
 	const hit =
-		entries.find((e) => e === caller) ??
-		entries.find((e) => e.toLowerCase() === want) ??
+		entries.find((e) => e.isDirectory() && e.name === caller) ??
+		entries.find((e) => e.isDirectory() && e.name.toLowerCase() === want) ??
 		entries.find((e) => {
-			const a = e.toLowerCase();
+			if (!e.isDirectory()) return false;
+			const a = e.name.toLowerCase();
 			return a.startsWith(want) || want.startsWith(a);
 		});
-	return hit ? { name: hit, dir: join(root, hit) } : null;
+	return hit ? { name: hit.name, dir: join(root, hit.name) } : null;
 }
 
 /**

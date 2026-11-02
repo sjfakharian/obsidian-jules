@@ -492,15 +492,15 @@ function unslugPath(vaultRoot: string, slug: string): string | null {
 
 	let acc = "";
 	for (const want of parts) {
-		let entries: string[];
+		let entries;
 		try {
-			entries = readdirSync(join(vaultRoot, acc));
+			entries = readdirSync(join(vaultRoot, acc), { withFileTypes: true });
 		} catch {
 			return null;
 		}
-		const hits = entries.filter((e) => e === want || e.replace(/ /g, "-") === want);
+		const hits = entries.filter((e) => e.name === want || e.name.replace(/ /g, "-") === want);
 		if (hits.length !== 1) return null; // missing, or ambiguous
-		acc = acc ? `${acc}/${hits[0]}` : hits[0]!;
+		acc = acc ? `${acc}/${hits[0]!.name}` : hits[0]!.name;
 	}
 	return acc;
 }

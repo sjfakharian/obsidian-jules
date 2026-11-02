@@ -25,3 +25,7 @@
 ## 2024-11-20 - O(N) Array Allocation in formatRecentChanges
 **Learning:** `gitOutput.split("\n")` in `formatRecentChanges` creates a huge intermediate array for large git history outputs, even though we only need the first `limit` non-empty lines. This O(N) allocation causes unnecessary garbage collection and memory overhead, taking significantly longer than an iterative string slicing approach.
 **Action:** Use an iterative approach with `indexOf('\n')` and `slice` instead of `split` to process lines incrementally when reading from large outputs. This avoids massive array allocations entirely.
+
+## 2024-11-20 - Unnecessary `withFileTypes: true` micro-pessimization
+**Learning:** Found that using `readdirSync` with `{ withFileTypes: true }` when there are NO subsequent `statSync`/`lstatSync` calls in the loop actually introduces a slight micro-pessimization, as V8 allocation of `fs.Dirent` objects is slightly slower than simply returning strings from libuv.
+**Action:** Only use `{ withFileTypes: true }` if you actually need to determine if an entry is a file, directory, or symlink without making an extra `statSync` call. Do not blindly apply it to all `readdirSync` calls.

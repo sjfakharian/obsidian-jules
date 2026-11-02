@@ -28,9 +28,9 @@ import { generateMemoryIndex, type BrainNote } from "./lib/automemory-index.ts";
 export function collectBrainNotes(root: string): BrainNote[] | null {
 	let entries: string[] = [];
 	try {
-		entries = readdirSync(join(root, "brain")).filter((n) =>
-			isMarkdownFilename(n),
-		);
+		entries = readdirSync(join(root, "brain"), { withFileTypes: true })
+			.filter((e) => e.isFile() && isMarkdownFilename(e.name))
+			.map((e) => e.name);
 	} catch {
 		return null;
 	}

@@ -25,3 +25,7 @@
 ## 2024-11-20 - O(N) Array Allocation in formatRecentChanges
 **Learning:** `gitOutput.split("\n")` in `formatRecentChanges` creates a huge intermediate array for large git history outputs, even though we only need the first `limit` non-empty lines. This O(N) allocation causes unnecessary garbage collection and memory overhead, taking significantly longer than an iterative string slicing approach.
 **Action:** Use an iterative approach with `indexOf('\n')` and `slice` instead of `split` to process lines incrementally when reading from large outputs. This avoids massive array allocations entirely.
+
+## 2025-01-16 - O(N) Array Allocation in sumAuditField
+**Learning:** `text.split("\n")` in `sumAuditField` creates a huge intermediate array for large audit log files (up to 5MB, and sometimes two generations). This O(N) allocation causes unnecessary garbage collection and memory overhead for large log traversals.
+**Action:** Use an iterative approach with `indexOf('\n')` and `slice` instead of `split` to process lines incrementally when reading from large text blocks. This avoids massive array allocations entirely.

@@ -309,7 +309,16 @@ export function sumAuditField(
 		// window leaves exactly that, and an earlier version read the resulting
 		// empty text as "no entries today" and reported a confident zero.
 		if (!whole) complete &&= predatesDay(text, dayPrefix);
-		for (const line of text.split("\n")) {
+
+		// ⚡ Bolt: Iterative line slicing prevents O(N) array allocation overhead
+		// compared to text.split("\n") on large multi-megabyte audit logs.
+		let start = 0;
+		while (start <= text.length) {
+			const nl = text.indexOf("\n", start);
+			const end = nl === -1 ? text.length : nl;
+			const line = text.slice(start, end);
+			start = end + 1;
+
 			// Cheap reject before the parse: any encoding of an entry with this
 			// action contains the action's name somewhere in the line.
 			if (!line.includes(action)) continue;

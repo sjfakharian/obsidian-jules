@@ -9,3 +9,7 @@
 ## 2024-11-01 - Conditional ANSI Colors
 **Learning:** While native ANSI escape codes are great for CLI output readability, they can pollute the output in non-TTY environments (like logs or when consumed by AI tools/scripts) if applied unconditionally.
 **Action:** When adding ANSI colors to terminal outputs, always conditionally apply them by checking `process.stdout.isTTY` or `process.stderr.isTTY`. Use a simple helper function or parameter to return empty strings when not in a TTY environment.
+
+## 2024-11-04 - Markdown for Agent UI Output
+**Learning:** For script outputs that are meant to be rendered in the agent's UI via `writeSystemMessage`, native ANSI escape codes don't work. The UI parses and displays these outputs as Markdown, making unformatted plain text difficult to read and scan.
+**Action:** When formatting string content intended for `writeSystemMessage` (such as checklist reminders or vault status summaries), use Markdown structural elements like headers, bolding, inline code blocks for paths, and emojis as visual anchors to improve the UX inside the agent's chat interface.

@@ -96,30 +96,30 @@ describe("stop-checklist", () => {
 		const { stdout, code } = runScript({ stop_hook_active: false });
 		assert.equal(code, 0);
 		const message = systemMessageOf(stdout);
-		assert.match(message, /Session end checklist:/);
+		assert.match(message, /## 🏁 Session End Checklist/);
 		assert.match(message, /Archive completed projects/);
 	});
 
 	test("emits the checklist when stop_hook_active is string 'true' (not strict)", () => {
 		const { stdout } = runScript({ stop_hook_active: "true" });
-		assert.match(systemMessageOf(stdout), /Session end checklist:/);
+		assert.match(systemMessageOf(stdout), /## 🏁 Session End Checklist/);
 	});
 
 	test("emits the checklist when the field is absent", () => {
 		const { stdout } = runScript({});
-		assert.match(systemMessageOf(stdout), /Session end checklist:/);
+		assert.match(systemMessageOf(stdout), /## 🏁 Session End Checklist/);
 	});
 
 	test("emits valid JSON on malformed input (safe default)", () => {
 		const { stdout, code } = runScript("garbage{{");
 		assert.equal(code, 0);
-		assert.match(systemMessageOf(stdout), /Session end checklist:/);
+		assert.match(systemMessageOf(stdout), /## 🏁 Session End Checklist/);
 	});
 
 	test("emits valid JSON on empty stdin", () => {
 		const { stdout, code } = runScript(null);
 		assert.equal(code, 0);
-		assert.match(systemMessageOf(stdout), /Session end checklist:/);
+		assert.match(systemMessageOf(stdout), /## 🏁 Session End Checklist/);
 	});
 
 	test("does not terminate the message with a stray newline", () => {
@@ -179,7 +179,7 @@ describe("stop-checklist", () => {
 			const { stdout, code } = runScript(payload);
 			assert.equal(code, 0);
 			const message = systemMessageOf(stdout);
-			assert.match(message, /Session end checklist:/);
+			assert.match(message, /## 🏁 Session End Checklist/);
 			rendered.add(message);
 		});
 	}

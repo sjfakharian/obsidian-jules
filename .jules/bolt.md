@@ -25,3 +25,7 @@
 ## 2024-11-20 - O(N) Array Allocation in formatRecentChanges
 **Learning:** `gitOutput.split("\n")` in `formatRecentChanges` creates a huge intermediate array for large git history outputs, even though we only need the first `limit` non-empty lines. This O(N) allocation causes unnecessary garbage collection and memory overhead, taking significantly longer than an iterative string slicing approach.
 **Action:** Use an iterative approach with `indexOf('\n')` and `slice` instead of `split` to process lines incrementally when reading from large outputs. This avoids massive array allocations entirely.
+
+## 2024-11-20 - O(N) Array Allocation in sumAuditField and predatesDay
+**Learning:** `text.split("\n")` in `sumAuditField` and `predatesDay` inside `lib/mcp-caller.ts` creates an intermediate array for parsing audit logs (up to 512KB strings). This O(N) allocation causes unnecessary garbage collection and memory overhead for large log strings, especially since `predatesDay` only needs the first line, and `sumAuditField` loops over all.
+**Action:** Used an iterative approach with `indexOf('\n')` and `slice` instead of `split` to process lines incrementally. This avoids massive array allocations and CPU overhead during frequent health-check validations.

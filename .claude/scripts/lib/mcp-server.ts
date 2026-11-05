@@ -868,9 +868,18 @@ export function createHandlers(deps: ServerDeps): Handlers {
 				rel === full || rel.startsWith("/") || /^[A-Za-z]:/.test(rel)
 					? uri
 					: `vault://note/${rel.split("/").map(encodeURIComponent).join("/")}`;
+
+			let text: string;
+			try {
+				text = readFileSync(full, "utf8");
+			} catch {
+				audit("resource_read_error", { uri: served });
+				return session.fail(id, `resource could not be read: ${served}`, -32602);
+			}
+
 			audit("resource_read", served === uri ? { uri } : { uri: served, from: uri });
 			session.ok(id, {
-				contents: [{ uri: served, mimeType: "text/markdown", text: readFileSync(full, "utf8") }],
+				contents: [{ uri: served, mimeType: "text/markdown", text }],
 			});
 		},
 

@@ -264,7 +264,8 @@ function tail(path: string): { text: string; whole: boolean } {
  * unreadable or absent first entry proves nothing, so it counts as partial.
  */
 function predatesDay(text: string, dayPrefix: string): boolean {
-	const first = text.split("\n", 1)[0];
+	const nlIdx = text.indexOf("\n");
+	const first = nlIdx === -1 ? text : text.slice(0, nlIdx);
 	if (!first?.trim()) return false;
 	try {
 		const at = (JSON.parse(first) as AuditEntry).at;
@@ -309,7 +310,14 @@ export function sumAuditField(
 		// window leaves exactly that, and an earlier version read the resulting
 		// empty text as "no entries today" and reported a confident zero.
 		if (!whole) complete &&= predatesDay(text, dayPrefix);
-		for (const line of text.split("\n")) {
+
+		let start = 0;
+		while (start <= text.length) {
+			let end = text.indexOf("\n", start);
+			if (end === -1) end = text.length;
+			const line = text.slice(start, end);
+			start = end + 1;
+
 			// Cheap reject before the parse: any encoding of an entry with this
 			// action contains the action's name somewhere in the line.
 			if (!line.includes(action)) continue;

@@ -25,3 +25,7 @@
 ## 2024-11-20 - O(N) Array Allocation in formatRecentChanges
 **Learning:** `gitOutput.split("\n")` in `formatRecentChanges` creates a huge intermediate array for large git history outputs, even though we only need the first `limit` non-empty lines. This O(N) allocation causes unnecessary garbage collection and memory overhead, taking significantly longer than an iterative string slicing approach.
 **Action:** Use an iterative approach with `indexOf('\n')` and `slice` instead of `split` to process lines incrementally when reading from large outputs. This avoids massive array allocations entirely.
+
+## 2024-11-20 - O(N) Array Allocation in string split
+**Learning:** Found multiple places (`predatesDay` and `sumAuditField` in `lib/mcp-caller.ts`, and `main` in `naming-guard.ts`) where strings were being partitioned using `.split()` (like `.split("\n")` or `.split("/")`). This forces V8 to allocate massive transient arrays, causing measurable garbage collection pressure and CPU overhead on large outputs or repetitive calls.
+**Action:** Use an iterative approach utilizing `.indexOf()` and `.slice()` to read lines or path segments individually. This completely eliminates the temporary array allocations, yielding significantly improved memory efficiency and throughput when processing large inputs.

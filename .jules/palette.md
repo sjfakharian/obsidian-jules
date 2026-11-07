@@ -9,3 +9,7 @@
 ## 2024-11-01 - Conditional ANSI Colors
 **Learning:** While native ANSI escape codes are great for CLI output readability, they can pollute the output in non-TTY environments (like logs or when consumed by AI tools/scripts) if applied unconditionally.
 **Action:** When adding ANSI colors to terminal outputs, always conditionally apply them by checking `process.stdout.isTTY` or `process.stderr.isTTY`. Use a simple helper function or parameter to return empty strings when not in a TTY environment.
+
+## 2024-11-02 - Markdown and Emojis for System Messages
+**Learning:** System messages sent to the user interface (like Jules-OS agent UI) often lack visual structure when they are plain text. Since these messages are rendered as markdown, using markdown elements (headers, bold text, lists) and emojis provides a much better and scannable visual output than plain text.
+**Action:** When formatting string outputs that will be sent as a `systemMessage` to the agent UI, use markdown formatting and emojis instead of just plain text to enhance the user experience.

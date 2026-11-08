@@ -63,11 +63,11 @@ if (input?.stop_hook_active === true) {
 }
 
 const checklist = [
-	"Session end checklist:",
-	"- Archive completed projects? (work/active/ -> work/archive/YYYY/)",
-	"- Update indexes? (Index.md, Memories.md, People & Context, Brag Doc)",
-	"- New notes linked? (orphans are bugs)",
-	"- Run /om-vault-audit if many notes were created/modified",
+	"## 🛑 Session End Checklist",
+	"- 📦 **Archive completed projects?** (`work/active/` → `work/archive/YYYY/`)",
+	"- 📑 **Update indexes?** (`Index.md`, `Memories.md`, People & Context, Brag Doc)",
+	"- 🔗 **New notes linked?** (orphans are bugs)",
+	"- 🧹 **Run \`/om-vault-audit\`** if many notes were created/modified",
 ].join("\n");
 
 // Concrete drift findings beat a generic checklist (#98/#103/#106): the

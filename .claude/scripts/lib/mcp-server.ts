@@ -869,9 +869,13 @@ export function createHandlers(deps: ServerDeps): Handlers {
 					? uri
 					: `vault://note/${rel.split("/").map(encodeURIComponent).join("/")}`;
 			audit("resource_read", served === uri ? { uri } : { uri: served, from: uri });
-			session.ok(id, {
-				contents: [{ uri: served, mimeType: "text/markdown", text: readFileSync(full, "utf8") }],
-			});
+			try {
+				session.ok(id, {
+					contents: [{ uri: served, mimeType: "text/markdown", text: readFileSync(full, "utf8") }],
+				});
+			} catch (e) {
+				return session.fail(id, `failed to read resource: ${uri}`, -32603);
+			}
 		},
 
 		"prompts/list": (id) => session.ok(id, { prompts: PROMPTS }),

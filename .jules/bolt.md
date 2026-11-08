@@ -25,6 +25,11 @@
 ## 2024-11-20 - O(N) Array Allocation in formatRecentChanges
 **Learning:** `gitOutput.split("\n")` in `formatRecentChanges` creates a huge intermediate array for large git history outputs, even though we only need the first `limit` non-empty lines. This O(N) allocation causes unnecessary garbage collection and memory overhead, taking significantly longer than an iterative string slicing approach.
 **Action:** Use an iterative approach with `indexOf('\n')` and `slice` instead of `split` to process lines incrementally when reading from large outputs. This avoids massive array allocations entirely.
+
 ## 2024-11-20 - O(N) Array Allocation in audit log parsing
 **Learning:** Found that `text.split("\n")` and `text.split("\n", 1)[0]` in `.claude/scripts/lib/mcp-caller.ts` created huge intermediate arrays for parsing the 512KB audit log tails, causing severe GC pressure on frequently-accessed routes.
 **Action:** Replaced `split("\n")` with an iterative loop using `indexOf('\n')` and `slice` to process audit logs, avoiding unnecessary allocations entirely.
+
+## 2024-11-20 - O(N) Array Allocation in session-start northStar extraction
+**Learning:** Calling `stripFrontmatter(raw).split("\n")` to extract and process specific lines from "North Star.md" created an unnecessary large array of the full file contents in memory.
+**Action:** Avoid `.split("\n")` entirely for iterative line processing, replace with `indexOf("\n")` loop and `.slice` to reduce CPU and GC overhead, building a new array only for matched lines.

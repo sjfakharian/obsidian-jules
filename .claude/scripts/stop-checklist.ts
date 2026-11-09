@@ -97,7 +97,7 @@ const hygieneLines = formatActiveHygiene(
 const message =
 	checklist +
 	(hygieneLines.length > 0
-		? "\n\nVault Hygiene (drift detected):\n" + hygieneLines.join("\n")
+		? "\n\n## 🧹 Vault Hygiene (drift detected)\n\n" + hygieneLines.join("\n")
 		: "");
 
 writeSystemMessage(message);

@@ -362,7 +362,7 @@ describe("scanActiveHygiene — detectors", () => {
 			assert.equal(inbox?.namedOnly, 1, "the bare marker counts, the anchored one does not");
 
 			const text = formatActiveHygiene(await scanActiveHygiene(solo, NOW, DEFAULTS)).join("\n");
-			assert.match(text, /1 already-promoted capture\(s\) here carry a bare marker/);
+			assert.match(text, /\*\*1\*\* already-promoted capture\(s\) here carry a bare marker/);
 		} finally {
 			rmSync(solo, { recursive: true, force: true });
 		}
@@ -506,9 +506,9 @@ describe("formatActiveHygiene", () => {
 			memoryInbox: null,
 		});
 		const text = lines.join("\n");
-		assert.match(text, /marked done but still in active\//);
+		assert.match(text, /marked done but still in `active\/`/);
 		assert.match(text, /SPLIT/);
-		assert.match(text, new RegExp(`${OPEN_LOOP_DAYS}\\+ days`));
+		assert.match(text, new RegExp(`${OPEN_LOOP_DAYS}\\+\\*\\* days`));
 		assert.doesNotMatch(text, /om-intake/); // silent segment omitted
 	});
 });

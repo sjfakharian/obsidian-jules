@@ -696,45 +696,46 @@ export function formatActiveHygiene(report: ActiveHygieneReport): string[] {
 
 	if (completedInActive.length > 0) {
 		lines.push(
-			`⚠️  ${completedInActive.length} note(s) marked done but still in active/ — archive to archive/YYYY/ (try /om-project-archive):`,
+			`⚠️  **${completedInActive.length}** note(s) marked done but still in \`active/\` — archive to \`archive/YYYY/\` (try \`/om-project-archive\`):`,
 		);
-		for (const p of completedInActive) lines.push(`   - ${p}`);
+		for (const p of completedInActive) lines.push(`   - \`${p}\``);
 	}
 
 	if (ungroupedClusters.length > 0) {
 		if (lines.length > 0) lines.push("");
 		lines.push(
-			"⚠️  Loose active/ notes that look like one topic — consider a folder (active/<Topic>/):",
+			"⚠️  Loose \`active/\` notes that look like one topic — consider a folder (\`active/<Topic>/\`):",
 		);
 		for (const { token, files } of ungroupedClusters) {
-			lines.push(`   - "${token}": ${files.join(", ")}`);
+			const formattedFiles = files.map(f => `\`${f}\``).join(", ");
+			lines.push(`   - "**${token}**": ${formattedFiles}`);
 		}
 	}
 
 	if (oversizedNotes.length > 0) {
 		if (lines.length > 0) lines.push("");
 		lines.push(
-			`⚠️  ${oversizedNotes.length} note(s) past the ${MONOLITH_BYTES / 1000}KB organization threshold — do NOT trim content; SPLIT (domain notes / event-log satellites / a cluster folder, verbatim, one-liner index behind):`,
+			`⚠️  **${oversizedNotes.length}** note(s) past the **${MONOLITH_BYTES / 1000}KB** organization threshold — do NOT trim content; SPLIT (domain notes / event-log satellites / a cluster folder, verbatim, one-liner index behind):`,
 		);
 		for (const { path, sizeKb } of oversizedNotes) {
-			lines.push(`   - ${path} (${sizeKb}KB)`);
+			lines.push(`   - \`${path}\` (${sizeKb}KB)`);
 		}
 	}
 
 	if (openLoops.length > 0) {
 		if (lines.length > 0) lines.push("");
 		lines.push(
-			`⚠️  ${openLoops.length} note(s) with open follow-ups untouched ${OPEN_LOOP_DAYS}+ days — close, chase, or consciously park (paths + counts only by design):`,
+			`⚠️  **${openLoops.length}** note(s) with open follow-ups untouched **${OPEN_LOOP_DAYS}+** days — close, chase, or consciously park (paths + counts only by design):`,
 		);
 		for (const { path, ageDays, openItems } of openLoops) {
-			lines.push(`   - ${path} (${ageDays}d, ${openItems} open item(s))`);
+			lines.push(`   - \`${path}\` (${ageDays}d, ${openItems} open item(s))`);
 		}
 	}
 
 	if (inboxPressure !== null) {
 		if (lines.length > 0) lines.push("");
 		lines.push(
-			`⚠️  ${inboxPressure.count} raw export(s) sitting in work/meetings/ for ${INBOX_PRESSURE_DAYS}+ days (oldest ${inboxPressure.oldestDays}d) — run /om-intake to drain the inbox.`,
+			`⚠️  **${inboxPressure.count}** raw export(s) sitting in \`work/meetings/\` for **${INBOX_PRESSURE_DAYS}+** days (oldest ${inboxPressure.oldestDays}d) — run \`/om-intake\` to drain the inbox.`,
 		);
 	}
 
@@ -744,14 +745,14 @@ export function formatActiveHygiene(report: ActiveHygieneReport): string[] {
 	if (memoryInbox !== null) {
 		if (lines.length > 0) lines.push("");
 		lines.push(
-			`⚠️  ${memoryInbox.count} cross-repo memory capture(s) awaiting review (oldest ${memoryInbox.oldestDays}d). Promote a durable one by COPYING it into the right brain/ note and adding \`promoted: "brain/Note#^om-a1b2c3"\` to the capture's frontmatter, pointing at the block you copied — the entry stays, because recall reaches brain/ only THROUGH a capture, so deleting it takes the lesson away from every repo that cannot read brain/ at all. The ANCHOR is what lets recall serve the corrected text; a bare \`promoted: <note>\` clears this count but serves nothing.`,
+			`⚠️  **${memoryInbox.count}** cross-repo memory capture(s) awaiting review (oldest ${memoryInbox.oldestDays}d). Promote a durable one by COPYING it into the right \`brain/\` note and adding \`promoted: "brain/Note#^om-a1b2c3"\` to the capture's frontmatter, pointing at the block you copied — the entry stays, because recall reaches \`brain/\` only THROUGH a capture, so deleting it takes the lesson away from every repo that cannot read \`brain/\` at all. The ANCHOR is what lets recall serve the corrected text; a bare \`promoted: <note>\` clears this count but serves nothing.`,
 		);
 		// Evidence for the sentence above, from this vault rather than in the
 		// abstract. Told once the flag is already firing — it never raises one of
 		// its own, because a bare marker is a legitimate promotion. (#183)
 		if (memoryInbox.namedOnly > 0) {
 			lines.push(
-				`   ${memoryInbox.namedOnly} already-promoted capture(s) here carry a bare marker, so recall serves none of them. Re-point one by adding the anchor of the block you copied.`,
+				`   **${memoryInbox.namedOnly}** already-promoted capture(s) here carry a bare marker, so recall serves none of them. Re-point one by adding the anchor of the block you copied.`,
 			);
 		}
 	}

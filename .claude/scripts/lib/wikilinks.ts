@@ -102,12 +102,16 @@ export function extractWikilinkTargets(content: string): string[] {
 		// (`[[Target&#124;alias]]`). Normalize before splitting so the
 		// target doesn't keep a trailing `\` or `&`.
 		inner = inner.replaceAll("\\|", "|").replaceAll("&#124;", "|");
-		const target = (inner.split("|")[0] ?? "").split("#")[0]?.trim() ?? "";
+		let target = inner;
+		const pipeIdx = target.indexOf("|");
+		if (pipeIdx !== -1) target = target.slice(0, pipeIdx);
+		const hashIdx = target.indexOf("#");
+		if (hashIdx !== -1) target = target.slice(0, hashIdx);
+		target = target.trim();
 		if (target === "") continue; // [[#heading]] / [[|alias]] — same-file
 		if (target.includes("{{")) continue; // template placeholder
-		const ext = target.includes(".")
-			? (target.split(".").pop() ?? "").toLowerCase()
-			: "";
+		const extIdx = target.lastIndexOf(".");
+		const ext = extIdx !== -1 ? target.slice(extIdx + 1).toLowerCase() : "";
 		if (ASSET_EXTENSIONS.has(ext)) continue;
 		targets.push(target);
 	}
@@ -208,7 +212,13 @@ const stripMdExt = (p: string): string => p.replace(/\.md$/i, "");
 /** POSIX-normalize `dir/../x` style paths; returns null when escaping root. */
 function normalizeRelative(path: string): string | null {
 	const parts: string[] = [];
-	for (const seg of path.split("/")) {
+	let start = 0;
+	while (start <= path.length) {
+		let end = path.indexOf("/", start);
+		if (end === -1) end = path.length;
+		const seg = path.slice(start, end);
+		start = end + 1;
+
 		if (seg === "" || seg === ".") continue;
 		if (seg === "..") {
 			if (parts.length === 0) return null;
@@ -235,7 +245,8 @@ export function buildResolver(
 	const pathSet = new Set(files.map((f) => stripMdExt(f).toLowerCase()));
 	const basenames = new Set(
 		files.map((f) => {
-			const base = f.split("/").pop() ?? f;
+			const idx = f.lastIndexOf("/");
+			const base = idx === -1 ? f : f.slice(idx + 1);
 			return stripMdExt(base).toLowerCase();
 		}),
 	);
@@ -248,12 +259,9 @@ export function buildResolver(
 
 		// Source-relative (./ or ../) — resolve against the source's dir.
 		if (clean.startsWith("./") || clean.startsWith("../")) {
-			const sourceDir = sourceRelPath
-				.replace(/\\/g, "/")
-				.toLowerCase()
-				.split("/")
-				.slice(0, -1)
-				.join("/");
+			const normSource = sourceRelPath.replace(/\\/g, "/").toLowerCase();
+			const lastSlashIdx = normSource.lastIndexOf("/");
+			const sourceDir = lastSlashIdx === -1 ? "" : normSource.slice(0, lastSlashIdx);
 			const resolved = normalizeRelative(
 				sourceDir === "" ? clean : `${sourceDir}/${clean}`,
 			);

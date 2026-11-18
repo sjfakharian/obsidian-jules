@@ -94,7 +94,24 @@ async function main(): Promise<void> {
 	const abs = resolve(fp);
 	const rel = relative(ROOT, abs);
 	if (rel.startsWith("..") || existsSync(abs)) return writeSilentHookOutput(); // outside the vault, or editing an existing file
-	if (SKIP_PREFIXES.some((p) => rel.startsWith(p)) || rel.split("/").some((s) => SKIP_SEGMENTS.has(s))) return writeSilentHookOutput();
+	if (SKIP_PREFIXES.some((p) => rel.startsWith(p))) return writeSilentHookOutput();
+
+	// ⚡ Bolt: Performance optimization
+	// Replaced rel.split("/").some(...) with an iterative index search
+	// to prevent unnecessary array allocations and garbage collection overhead.
+	let start = 0;
+	let shouldSkip = false;
+	while (start <= rel.length) {
+		let end = rel.indexOf("/", start);
+		if (end === -1) end = rel.length;
+		if (SKIP_SEGMENTS.has(rel.slice(start, end))) {
+			shouldSkip = true;
+			break;
+		}
+		start = end + 1;
+	}
+	if (shouldSkip) return writeSilentHookOutput();
+
 	if (exceptions().some((p) => rel.startsWith(p))) return writeSilentHookOutput();
 	const found = problems(rel);
 	if (found.length === 0) return writeSilentHookOutput();

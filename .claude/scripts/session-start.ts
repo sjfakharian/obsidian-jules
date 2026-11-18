@@ -290,25 +290,47 @@ function northStar(): string {
 	// and truncate current strategy.
 	try {
 		const raw = readFileSync("brain/North Star.md", { encoding: "utf-8" });
-		const lines = stripFrontmatter(raw).split("\n");
-		const anchor = lines.findIndex((l) =>
-			l.trim().startsWith("## Current Focus"),
-		);
-		const scoped = anchor >= 0 ? lines.slice(anchor) : lines;
-		const struckCount = scoped.filter((l) =>
-			l.trimStart().startsWith("- ~~"),
-		).length;
-		const live = scoped.filter((l) => !l.trimStart().startsWith("- ~~"));
-		if (struckCount > 0) {
+
+		// ⚡ Bolt: Performance optimization
+		// Avoid string.split('\n') which creates large intermediate arrays.
+		const content = stripFrontmatter(raw);
+		let start = 0;
+		const liveLines: string[] = [];
+		let anchorFound = false;
+		let struckCount = 0;
+
+		while (start <= content.length) {
+			let end = content.indexOf("\n", start);
+			if (end === -1) end = content.length;
+			if (end > start) {
+				const line = content.slice(start, end);
+				if (!anchorFound) {
+					if (line.trim().startsWith("## Current Focus")) {
+						anchorFound = true;
+						liveLines.push(line);
+					}
+				} else {
+					if (line.trimStart().startsWith("- ~~")) {
+						struckCount++;
+					} else {
+						liveLines.push(line);
+					}
+				}
+			}
+			start = end + 1;
+		}
+
+		if (struckCount > 0 && liveLines.length > 0) {
 			// Struck bullets can carry live tails — keep a pointer so sessions
 			// know completed context exists in the file.
-			live.splice(
+			liveLines.splice(
 				1,
 				0,
 				`_(${struckCount} completed item${struckCount === 1 ? "" : "s"} hidden — full history in brain/North Star.md)_`,
 			);
 		}
-		return take(live.join("\n"), 30);
+
+		return take(liveLines.length > 0 ? liveLines.join("\n") : content, 30);
 	} catch {
 		return "(not found)";
 	}
